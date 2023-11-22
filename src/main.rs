@@ -40,7 +40,6 @@ pub fn is_key_released(key: i32) -> bool {
 fn main() {
     println!("Press 1 for Sin wave, 2 for Saw wave, etc...");
 
-    let mut is_playing = false;
     let mut stop_playing = false;
     let mut start_playing = false;
     
@@ -50,7 +49,6 @@ fn main() {
     let base_frequency = 110.0;
     let twelfth_root_of_two = (2.0 as f32).powf(1.0 / 12.0);
     
-    //let kb_layout = "ZSXCFVGBNJMK,l./";
     let kb_layout = "zsxcfvgbnjmk,l./";
     let mut key_pressed = false;
     let mut current_key = usize::MAX;
@@ -59,6 +57,7 @@ fn main() {
         let mut frequency = 0.0;
 
         key_pressed = false;
+        stop_playing = false;
 
         if is_key_pressed('0'){
             break 'program_loop;
@@ -67,47 +66,48 @@ fn main() {
         'char_loop: for i in 0..16{
             if let Some(key) = kb_layout.chars().nth(i) {
                 if is_key_pressed(key){
+                    
                     key_pressed = true;
                     
                     if current_key != i {
-                        //stop_playing = true;
                         frequency = base_frequency * twelfth_root_of_two.powf(i as f32);
-                        if !is_playing {
-                            start_playing = true;
-                            stop_playing = false;
-                        }
+                        start_playing = true;
                     }
 
                     current_key = i;
 
-                    break 'char_loop;
+                    //break 'char_loop;
                 }
-
             }
         }
+
+        
 
         if !key_pressed {
             current_key = usize::MAX;
             frequency = 0.0;
-            if !stop_playing {
-                stop_playing = true;
-            }
+            stop_playing = true;
         }
         
-        if is_playing && stop_playing {
+        if stop_playing {
             sink.stop();
+            sink.clear();
             start_playing = false;
-            is_playing = false;
         }
         
-        if !is_playing && start_playing {
+        if start_playing {
+            println!("start_playing {}", current_key);
             let mut oscillator = WavetableOscillator::new(44100, 64, WaveType::Sine);
             oscillator.set_frequency(frequency);
             oscillator.set_gain(-30.0);
 
+            if sink.len() > 0 as usize {
+                sink.stop();
+                sink.clear();
+            }
+
             sink.append(oscillator);
             sink.play();
-            is_playing = true;
             start_playing = false;
         }  
     }
