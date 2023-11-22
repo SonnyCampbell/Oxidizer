@@ -1,21 +1,19 @@
 use rodio::{OutputStream, Sink};
 use windows;
-use ::phf::{Map, phf_map};
-
-use std::time::Duration;
-use std::thread;
 
 mod wavetable_oscillator;
 use wavetable_oscillator::WavetableOscillator;
 
 mod wavetable;
-use wavetable::WaveTable;
+mod combined_oscillator;
 
 mod wavetype;
 use wavetype::WaveType;
 
 mod virtual_codes;
 use virtual_codes::VIRTUAL_CODES;
+
+use crate::combined_oscillator::CombinedOscillator;
 
 pub fn is_key_pressed(key: char) -> bool {
     if let Some(key_char) = VIRTUAL_CODES.get(&key) {
@@ -51,13 +49,16 @@ fn main() {
     
     let kb_layout = "zsxcfvgbnjmk,l./";
     let mut key_pressed = false;
-    let mut current_key = usize::MAX;
+    //let mut current_key = usize::MAX;
+    let mut current_keys: Vec<i32> = Vec::with_capacity(16);
 
     'program_loop: loop {
-        let mut frequency = 0.0;
 
         key_pressed = false;
         stop_playing = false;
+
+        let mut frequencies: Vec<f32> = Vec::with_capacity(8);
+        let mut new_keys: Vec<i32> = Vec::with_capacity(16);
 
         if is_key_pressed('0'){
             break 'program_loop;
@@ -68,25 +69,30 @@ fn main() {
                 if is_key_pressed(key){
                     
                     key_pressed = true;
-                    
-                    if current_key != i {
-                        frequency = base_frequency * twelfth_root_of_two.powf(i as f32);
-                        start_playing = true;
-                    }
-
-                    current_key = i;
-
-                    //break 'char_loop;
+                    new_keys.push(i as i32);
+                    frequencies.push(base_frequency * twelfth_root_of_two.powf(i as f32));
                 }
             }
         }
 
+
+        if(current_keys.len() != new_keys.len()){
+            start_playing = true;
+        }
+        else{
+            for i in current_keys {
+                if !new_keys.contains(&i) {
+                    start_playing= true;
+                }
+            }
+        }
+        current_keys = new_keys.clone();
+
         
 
         if !key_pressed {
-            current_key = usize::MAX;
-            frequency = 0.0;
             stop_playing = true;
+            current_keys.clear();
         }
         
         if stop_playing {
@@ -96,17 +102,23 @@ fn main() {
         }
         
         if start_playing {
-            println!("start_playing {}", current_key);
-            let mut oscillator = WavetableOscillator::new(44100, 64, WaveType::Sine);
-            oscillator.set_frequency(frequency);
-            oscillator.set_gain(-30.0);
+            println!("start_playing {:?}", current_keys);
+            println!("combining {} freqs", frequencies.len());
+
+            let mut combined = CombinedOscillator::new();
+            for freq in frequencies {
+                let mut oscillator = WavetableOscillator::new(44100, 64, WaveType::Sine);
+                oscillator.set_frequency(freq);
+                oscillator.set_gain(-30.0);
+                combined.add_oscillator(oscillator);
+            }
 
             if sink.len() > 0 as usize {
                 sink.stop();
                 sink.clear();
             }
 
-            sink.append(oscillator);
+            sink.append(combined);
             sink.play();
             start_playing = false;
         }  

@@ -6,7 +6,7 @@ use crate::wavetype::WaveType;
 use crate::wavetable::WaveTable;
 
 pub struct WavetableOscillator{
-    sample_rate: u32,
+    pub sample_rate: u32,
     wave_table: WaveTable,
     index: f32,
     index_increment: f32,
@@ -41,7 +41,7 @@ impl WavetableOscillator {
         self.amplitude = Self::calculate_amplitude(gain);
     }
 
-    fn get_sample(&mut self) -> f32 {
+    pub fn get_sample(&mut self) -> f32 {
         let sample = self.lerp();
         self.index += self.index_increment;
         self.index %= self.wave_table.wave_table_size as f32;
