@@ -2,6 +2,7 @@ use rodio::{OutputStream, Sink};
 use console::Term;
 
 use std::time::Duration;
+use std::thread;
 
 mod wavetable_oscillator;
 use wavetable_oscillator::WavetableOscillator;
@@ -19,9 +20,15 @@ fn main() {
 
     let stdout = Term::buffered_stdout();
 
-    let mut wave_table = WaveTable::new(64, WaveType::Sine);
+    let mut is_playing = false;
+    let mut stop_playing = false;
+    let mut start_playing = false;
+    
+    let (_stream, stream_handle) = OutputStream::try_default().expect("Failed to create output stream");
+    let sink = Sink::try_new(&stream_handle).unwrap();
     
     'program_loop: loop {
+        let mut wave_table = WaveTable::new(64, WaveType::Sine);
         
 
         if let Ok(input) = stdout.read_char() {
@@ -31,6 +38,7 @@ fn main() {
                 '3' => wave_table.set_wave_type(WaveType::Tri),
                 '4' => wave_table.set_wave_type(WaveType::Square),
                 '5' => wave_table.set_wave_type(WaveType::Pulse),
+                'a' => stop_playing = true,
                 '0' => { break 'program_loop },
                 _ => wave_table.set_wave_type(WaveType::Sine),
             }
@@ -40,15 +48,21 @@ fn main() {
         oscillator.set_frequency(220.0);
         oscillator.set_gain(-30.0);
 
-        // Set up the audio output stream
-        let (_stream, stream_handle) = OutputStream::try_default().expect("Failed to create output stream");
         
-        let sink = Sink::try_new(&stream_handle).unwrap();
-        sink.append(oscillator);
-        //sink.sleep_until_end();
-        sink.play();
-        //let _result = stream_handle.play_raw(oscillator.convert_samples());
-        std::thread::sleep(Duration::from_secs(3));
+        if is_playing && stop_playing {
+            sink.stop();
+            start_playing = false;
+        }
+        
+        if !is_playing && start_playing {
+            sink.append(oscillator);
+            sink.play();
+            is_playing = true;
+            start_playing = false;
+        }
+
+        
+        
     }
     
 }
