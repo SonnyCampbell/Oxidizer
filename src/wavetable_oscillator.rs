@@ -2,6 +2,7 @@
 use rodio::Source;
 use std::time::Duration;
 
+use crate::wavetype::WaveType;
 use crate::wavetable::WaveTable;
 
 pub struct WavetableOscillator{
@@ -14,12 +15,12 @@ pub struct WavetableOscillator{
 }
 
 impl WavetableOscillator {
-    pub fn new(sample_rate: u32, wave_table: WaveTable) -> WavetableOscillator {
+    pub fn new(sample_rate: u32, wave_table_size: usize, wave_type: WaveType) -> WavetableOscillator {
         let gain = 0.0;
 
         return WavetableOscillator { 
             sample_rate: sample_rate, 
-            wave_table: wave_table, 
+            wave_table: WaveTable::new(wave_table_size, wave_type), 
             index: 0.0, 
             index_increment: 0.0,
             gain: gain,

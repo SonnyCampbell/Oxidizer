@@ -20,13 +20,16 @@ impl Index<usize> for WaveTable {
 
 impl WaveTable {
     pub fn new(wave_table_size: usize, wave_type: WaveType) -> WaveTable {
-        return WaveTable { 
+        let mut table = WaveTable { 
             wave_type: wave_type, 
             wave_table: Vec::with_capacity(wave_table_size), 
             wave_table_size: wave_table_size };
+
+        table.populate_wave_table();
+        return table;
     }
     
-    pub fn set_wave_type(&mut self, wave_type: WaveType){
+    pub fn _set_wave_type(&mut self, wave_type: WaveType){
         self.wave_type = wave_type;
         self.populate_wave_table()
     }
