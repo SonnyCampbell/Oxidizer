@@ -2,9 +2,11 @@
 use rodio::Source;
 use std::time::Duration;
 
+use crate::wavetable::WaveTable;
+
 pub struct WavetableOscillator{
     sample_rate: u32,
-    wave_table: Vec<f32>,
+    wave_table: WaveTable,
     index: f32,
     index_increment: f32,
     gain: f32,
@@ -12,7 +14,7 @@ pub struct WavetableOscillator{
 }
 
 impl WavetableOscillator {
-    pub fn new(sample_rate: u32, wave_table: Vec<f32>) -> WavetableOscillator {
+    pub fn new(sample_rate: u32, wave_table: WaveTable) -> WavetableOscillator {
         let gain = 0.0;
 
         return WavetableOscillator { 
@@ -30,7 +32,7 @@ impl WavetableOscillator {
     }
 
     pub fn set_frequency(&mut self, frequency: f32){
-        self.index_increment = frequency * self.wave_table.len() as f32 / self.sample_rate as f32;
+        self.index_increment = frequency * self.wave_table.wave_table_size as f32 / self.sample_rate as f32;
     }
 
     pub fn set_gain(&mut self, gain: f32){
@@ -41,13 +43,13 @@ impl WavetableOscillator {
     fn get_sample(&mut self) -> f32 {
         let sample = self.lerp();
         self.index += self.index_increment;
-        self.index %= self.wave_table.len() as f32;
+        self.index %= self.wave_table.wave_table_size as f32;
         return sample * self.amplitude;
     }
 
     fn lerp(&self) -> f32 {
         let truncated_index = self.index as usize;
-        let next_index = (truncated_index + 1) % self.wave_table.len();
+        let next_index = (truncated_index + 1) % self.wave_table.wave_table_size;
 
         let next_index_weight = self.index - truncated_index as f32;
         let truncated_index_weight = 1.0 - next_index_weight;
