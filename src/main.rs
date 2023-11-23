@@ -7,6 +7,7 @@ mod wavetable;
 mod virtual_codes;
 
 mod keyboard;
+mod time;
 
 mod wavetype;
 use wavetype::WaveType;
@@ -14,6 +15,7 @@ use wavetype::WaveType;
 mod combined_oscillator;
 use combined_oscillator::CombinedOscillator;
 
+mod envelope;
 use eframe::{run_native, App, NativeOptions, egui};
 use egui::*;
 
