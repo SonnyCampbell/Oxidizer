@@ -92,58 +92,64 @@ impl OxidizerApp {
             self.restart_playing = false;
         } 
     }
+
+    fn handle_input(&mut self, ctx: &eframe::egui::Context){
+        self.stop_playing = false;
+        self.frequencies.clear();
+        self.new_keys.clear();
+
+        let kb_layout = "zsxcfvgbnjmk";
+        for i in 0..16 {
+            if let Some(key) = kb_layout.chars().nth(i) {
+                if ctx.input(|input| keyboard::is_key_pressed(input, key) || keyboard::is_key_down(input, key)) {
+                    self.new_keys.push(i as i32);
+                    self.add_frequency(i as f32);
+                }
+            }
+        }
+    }
+
+    fn render(&mut self, ui: &mut Ui){
+        ui.heading("Press any of these keys to make noise: zsxcfvgbnjmk");
+
+        ui.separator();
+
+        
+        ui.horizontal(|ui| {
+            ui.label("Wave Form:");
+            if ui.selectable_value(&mut self.selected_wave_type, WaveType::Sine, "Sin").changed() {
+                self.restart_playing = true;
+            }
+            if ui.selectable_value(&mut self.selected_wave_type, WaveType::Saw, "Saw").changed() {
+                self.restart_playing = true;
+            }
+            if ui.selectable_value(&mut self.selected_wave_type, WaveType::Tri, "Triangle").changed() {
+                self.restart_playing = true;
+            }
+            if ui.selectable_value(&mut self.selected_wave_type, WaveType::Square, "Square").changed() {
+                self.restart_playing = true;
+            }
+            if ui.selectable_value(&mut self.selected_wave_type, WaveType::Pulse, "Pulse").changed() {
+                self.restart_playing = true;
+            }
+        });
+        ui.end_row();
+    }
 }
 
 impl App for OxidizerApp {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Press any of these keys to make noise: zsxcfvgbnjmk");
-
-            ui.separator();
-
-            
-            ui.horizontal(|ui| {
-                ui.label("Wave Form:");
-                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Sine, "Sin").changed() {
-                    self.restart_playing = true;
-                }
-                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Saw, "Saw").changed() {
-                    self.restart_playing = true;
-                }
-                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Tri, "Triangle").changed() {
-                    self.restart_playing = true;
-                }
-                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Square, "Square").changed() {
-                    self.restart_playing = true;
-                }
-                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Pulse, "Pulse").changed() {
-                    self.restart_playing = true;
-                }
-            });
-            ui.end_row();
+            self.render(ui);
 
             if ctx.input(|input| keyboard::is_key_pressed_for_code(input, Key::Escape)) {
                 //Todo: quit app
             }
 
-            self.stop_playing = false;
-            self.frequencies.clear();
-            self.new_keys.clear();
-
-            let kb_layout = "zsxcfvgbnjmk";
-            for i in 0..16 {
-                if let Some(key) = kb_layout.chars().nth(i) {
-                    if ctx.input(|input| keyboard::is_key_pressed(input, key) || keyboard::is_key_down(input, key)) {
-                        self.new_keys.push(i as i32);
-                        self.add_frequency(i as f32);
-                    }
-                }
-            }
+            self.handle_input(ctx);
 
             self.start_stop_playing();
         });
-
-
     }
 }
 
