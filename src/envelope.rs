@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct EnvelopeADSR{
     attack_time: f32,
     decay_time: f32,
@@ -13,9 +14,9 @@ pub struct EnvelopeADSR{
 impl EnvelopeADSR{
     pub fn new() -> EnvelopeADSR {
         return EnvelopeADSR{
-            attack_time: 0.01,
-            decay_time: 0.01,
-            release_time: 0.2,
+            attack_time: 1.0,
+            decay_time: 1.0,
+            release_time: 2.0,
             sustain_amplitude: 0.8,
             start_amplitude: 1.0,
             trigger_on_time: 0.0,

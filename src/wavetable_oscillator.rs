@@ -2,9 +2,9 @@
 use rodio::Source;
 use std::time::Duration;
 
-use crate::wavetype::WaveType;
 use crate::wavetable::{WaveTable, self};
 
+#[derive(Clone)]
 pub struct WavetableOscillator{
     pub sample_rate: u32,
     wave_table: &'static WaveTable,

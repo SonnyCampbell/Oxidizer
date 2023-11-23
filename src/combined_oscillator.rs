@@ -1,10 +1,10 @@
 use rodio::Source;
-use std::time::Duration;
+use std::{time::Duration, env::join_paths};
 
-use crate::wavetable_oscillator::WavetableOscillator;
+use crate::general_oscillator::GeneralOscillator;
 
 pub struct CombinedOscillator {
-    oscillators: Vec<WavetableOscillator>
+    oscillators: Vec<GeneralOscillator>
 }
 
 impl CombinedOscillator {
@@ -14,8 +14,12 @@ impl CombinedOscillator {
         };
     }
 
-    pub fn add_oscillator(&mut self, oscillator: WavetableOscillator){
+    pub fn add_oscillator(&mut self, oscillator: GeneralOscillator){
         self.oscillators.push(oscillator);
+    }
+
+    pub fn len(&self) -> usize {
+        return self.oscillators.len();
     }
 
     fn get_sample(&mut self) -> f32 {
@@ -43,11 +47,7 @@ impl Source for CombinedOscillator {
     }
 
     fn sample_rate(&self) -> u32 {
-        if let Some(table) = self.oscillators.iter().nth(0) {
-            return table.sample_rate;
-        }
-
-        return 0;
+        return 44100; //Todo sample rate
     }
 
     fn current_frame_len(&self) -> Option<usize> {
