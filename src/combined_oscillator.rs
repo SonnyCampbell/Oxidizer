@@ -21,7 +21,7 @@ impl CombinedOscillator {
     fn get_sample(&mut self) -> f32 {
         let mut total = 0.0;
 
-        for mut i in &mut self.oscillators {
+        for i in &mut self.oscillators {
             total += i.get_sample();
         }
 
