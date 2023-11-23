@@ -17,13 +17,12 @@ use combined_oscillator::CombinedOscillator;
 use eframe::{run_native, App, NativeOptions, egui};
 use egui::*;
 
-
-
 struct OxidizerApp{
     current_keys: Vec<i32>,
     new_keys: Vec<i32>,
     frequencies: Vec<f32>,
-    start_playing: bool,
+    selected_wave_type: WaveType,
+    restart_playing: bool,
     stop_playing: bool,
     sink: Sink
 }
@@ -34,7 +33,8 @@ impl OxidizerApp {
             current_keys: Vec::with_capacity(16),
             new_keys: Vec::with_capacity(16),
             frequencies: Vec::with_capacity(8),
-            start_playing: false,
+            selected_wave_type: WaveType::Sine,
+            restart_playing: false,
             stop_playing: false,
             sink: sink
         }
@@ -48,12 +48,12 @@ impl OxidizerApp {
 
     fn start_stop_playing(&mut self){
         if self.current_keys.len() != self.new_keys.len() {
-            self.start_playing = true;
+            self.restart_playing = true;
         }
         else{
             for i in &self.current_keys {
                 if !self.new_keys.contains(&i) {
-                    self.start_playing= true;
+                    self.restart_playing= true;
                 }
             }
         }
@@ -67,16 +67,16 @@ impl OxidizerApp {
         if self.stop_playing {
             self.sink.stop();
             self.sink.clear();
-            self.start_playing = false;
+            self.restart_playing = false;
         }
 
-        if self.start_playing {
+        if self.restart_playing {
             println!("start_playing {:?}", self.current_keys);
             println!("combining {} freqs", self.frequencies.len());
 
             let mut combined = CombinedOscillator::new();
             for freq in &self.frequencies {
-                let mut oscillator = WavetableOscillator::new(44100, 64, WaveType::Sine);
+                let mut oscillator = WavetableOscillator::new(44100, 64, self.selected_wave_type.clone());
                 oscillator.set_frequency(*freq);
                 oscillator.set_gain(-30.0);
                 combined.add_oscillator(oscillator);
@@ -89,7 +89,7 @@ impl OxidizerApp {
 
             self.sink.append(combined);
             self.sink.play();
-            self.start_playing = false;
+            self.restart_playing = false;
         } 
     }
 }
@@ -98,6 +98,29 @@ impl App for OxidizerApp {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             ui.heading("Press any of these keys to make noise: zsxcfvgbnjmk");
+
+            ui.separator();
+
+            
+            ui.horizontal(|ui| {
+                ui.label("Wave Form:");
+                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Sine, "Sin").changed() {
+                    self.restart_playing = true;
+                }
+                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Saw, "Saw").changed() {
+                    self.restart_playing = true;
+                }
+                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Tri, "Triangle").changed() {
+                    self.restart_playing = true;
+                }
+                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Square, "Square").changed() {
+                    self.restart_playing = true;
+                }
+                if ui.selectable_value(&mut self.selected_wave_type, WaveType::Pulse, "Pulse").changed() {
+                    self.restart_playing = true;
+                }
+            });
+            ui.end_row();
 
             if ctx.input(|input| keyboard::is_key_pressed_for_code(input, Key::Escape)) {
                 //Todo: quit app
