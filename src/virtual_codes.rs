@@ -1,5 +1,49 @@
 use ::phf::{Map, phf_map};
+use crate::egui::*;
 
+pub static VIRTUAL_CODES: Map<char, Key> = phf_map! {
+    '0'	=> Key::Num0,
+    '1'	=> Key::Num1,
+    '2' => Key::Num2,
+    '3' => Key::Num3,
+    '4' => Key::Num4,
+    '5' => Key::Num5,
+    '6' => Key::Num6,
+    '7' => Key::Num7,
+    '8' => Key::Num8,
+    '9' => Key::Num9,
+    'a' => Key::A,
+    'b' => Key::B,
+    'c' => Key::C,
+    'd' => Key::D,
+    'e' => Key::E,
+    'f' => Key::F,
+    'g' => Key::G,
+    'h' => Key::H,
+    'i' => Key::I,
+    'j' => Key::J,
+    'k' => Key::K,
+    'l' => Key::L,
+    'm' => Key::M,
+    'n' => Key::N,
+    'o' => Key::O,
+    'p' => Key::P,
+    'q' => Key::Q,
+    'r' => Key::R,
+    's' => Key::S,
+    't' => Key::T,
+    'u' => Key::U,
+    'v' => Key::V,
+    'w' => Key::W,
+    'x' => Key::X,
+    'y' => Key::Y,
+    'z' => Key::Z,
+    // ',' => b'\xbc' as i32,
+    // '.' => b'\xbe' as i32,
+    // '/' => b'\xbf' as i32,
+};
+
+/*
 pub static VIRTUAL_CODES: Map<char, i32> = phf_map! {
     '0'	=> 0x30,
     '1'	=> 0x31,
@@ -41,3 +85,5 @@ pub static VIRTUAL_CODES: Map<char, i32> = phf_map! {
     '.' => b'\xbe' as i32,
     '/' => b'\xbf' as i32,
 };
+
+ */
