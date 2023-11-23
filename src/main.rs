@@ -1,6 +1,7 @@
 use rodio::{OutputStream, Sink};
 
 mod wavetable_oscillator;
+use wavetable::WaveTables;
 use wavetable_oscillator::WavetableOscillator;
 
 mod wavetable;
@@ -8,6 +9,7 @@ mod virtual_codes;
 
 mod keyboard;
 mod time;
+mod general_oscillator;
 
 mod wavetype;
 use wavetype::WaveType;
@@ -19,18 +21,26 @@ mod envelope;
 use eframe::{run_native, App, NativeOptions, egui};
 use egui::*;
 
-struct OxidizerApp{
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref WAVE_TABLES: WaveTables = WaveTables::new();
+}
+
+struct OxidizerApp {
     current_keys: Vec<i32>,
     new_keys: Vec<i32>,
     frequencies: Vec<f32>,
     selected_wave_type: WaveType,
     restart_playing: bool,
     stop_playing: bool,
-    sink: Sink
+    sink: Sink,
+
+    wave_tables: &'static WaveTables
 }
 
-impl OxidizerApp {
-    fn default(sink: Sink) -> Self {
+impl OxidizerApp{
+    fn default(sink: Sink, wave_tables: &'static WaveTables) -> Self {
         Self { 
             current_keys: Vec::with_capacity(16),
             new_keys: Vec::with_capacity(16),
@@ -38,7 +48,9 @@ impl OxidizerApp {
             selected_wave_type: WaveType::Sine,
             restart_playing: false,
             stop_playing: false,
-            sink: sink
+            sink: sink,
+
+            wave_tables: wave_tables
         }
     }
 
@@ -78,7 +90,8 @@ impl OxidizerApp {
 
             let mut combined = CombinedOscillator::new();
             for freq in &self.frequencies {
-                let mut oscillator = WavetableOscillator::new(44100, 64, self.selected_wave_type.clone());
+                let wave_table = self.wave_tables.get_wave_table(&self.selected_wave_type);
+                let mut oscillator = WavetableOscillator::new(44100, wave_table);
                 oscillator.set_frequency(*freq);
                 oscillator.set_gain(-30.0);
                 combined.add_oscillator(oscillator);
@@ -156,10 +169,16 @@ impl App for OxidizerApp {
 }
 
 
+
+
 fn main() -> Result<(), eframe::Error> {
 
     let (_stream, stream_handle) = OutputStream::try_default().expect("Failed to create output stream");
     let sink = Sink::try_new(&stream_handle).unwrap();
+
+    
+
+    //let wave_tables: WaveTables::new();
     //
     env_logger::init(); 
     let options = NativeOptions::default();
@@ -169,7 +188,7 @@ fn main() -> Result<(), eframe::Error> {
         Box::new(|_cc| {
             // This gives us image support:
             //egui_extras::install_image_loaders(&cc.egui_ctx);
-            let app = OxidizerApp::default(sink);
+            let app = OxidizerApp::default(sink, &WAVE_TABLES);
             return Box::<OxidizerApp>::new(app);
         }));
     

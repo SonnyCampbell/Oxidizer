@@ -37,7 +37,7 @@ impl Iterator for CombinedOscillator {
     }
 }
 
-impl Source for CombinedOscillator{
+impl Source for CombinedOscillator {
     fn channels(&self) -> u16 {
         return 1;
     }

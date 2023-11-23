@@ -4,6 +4,36 @@ use std::ops::Index;
 
 use crate::wavetype::WaveType;
 
+pub struct WaveTables {
+    sin: WaveTable,
+    saw: WaveTable,
+    tri: WaveTable,
+    square: WaveTable,
+    pulse: WaveTable,
+}
+
+impl WaveTables {
+    pub fn new() -> WaveTables{
+        WaveTables { 
+            sin: WaveTable::new(64, WaveType::Sine), 
+            saw: WaveTable::new(64, WaveType::Saw), 
+            tri: WaveTable::new(64, WaveType::Tri), 
+            square: WaveTable::new(64, WaveType::Square), 
+            pulse: WaveTable::new(64, WaveType::Pulse), 
+        }
+    }
+
+    pub fn get_wave_table(&self, wave_type: &WaveType) -> &WaveTable{
+        return match wave_type {
+            WaveType::Sine => &self.sin,
+            WaveType::Saw => &self.saw,
+            WaveType::Tri => &self.tri,
+            WaveType::Square => &self.square,
+            WaveType::Pulse => &self.pulse,
+        };
+    }
+}
+
 pub struct WaveTable {
     wave_type: WaveType,
     wave_table: Vec<f32>,
@@ -28,15 +58,8 @@ impl WaveTable {
         table.populate_wave_table();
         return table;
     }
-    
-    pub fn _set_wave_type(&mut self, wave_type: WaveType){
-        self.wave_type = wave_type;
-        self.populate_wave_table()
-    }
 
     fn populate_wave_table(&mut self){
-        // fill wavetable with values of sine wave.
-        // change this to fill wave table with values of selected wave type
         self.wave_table.clear();
         let wave_table_size = self.wave_table_size;
         let wave_table = &mut self.wave_table;
@@ -58,25 +81,6 @@ impl WaveTable {
                     }
                 }
             }
-            // sine wave
-            //wave_table.push((2.0 * PI * t).sin());
-            
-            // saw wave
-            //wave_table.push(((t + PI) / PI) % 2.0 - 1.0);
-
-            // triangle wave
-            //wave_table.push(1.0 - (t - 0.5).abs()*4.0)
-
-            // square wave
-            //wave_table.push((2.0 * PI * t).sin().signum());
-
-            // pulse wave
-            // let duty_cycle = 0.2;
-            // if t % 1.0 < duty_cycle {
-            //     wave_table.push(1.0)
-            // } else {
-            //     wave_table.push(-1.0)
-            // }
         }
     }
 }
