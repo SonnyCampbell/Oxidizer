@@ -4,12 +4,12 @@ mod wavetable_oscillator;
 use wavetable_oscillator::WavetableOscillator;
 
 mod wavetable;
+mod virtual_codes;
+
+mod keyboard;
 
 mod wavetype;
 use wavetype::WaveType;
-
-mod virtual_codes;
-use virtual_codes::VIRTUAL_CODES;
 
 mod combined_oscillator;
 use combined_oscillator::CombinedOscillator;
@@ -17,44 +17,6 @@ use combined_oscillator::CombinedOscillator;
 use eframe::{run_native, App, NativeOptions, egui};
 use egui::*;
 
-pub fn is_key_pressed(i: &InputState, key: char) -> bool {
-    if let Some(key_char) = VIRTUAL_CODES.get(&key) {
-        return is_key_pressed_for_code(i, *key_char);
-    } 
-    
-    println!("Virtual code is not defined for {}", key);
-    return false;
-}
-
-pub fn is_key_released(i: &InputState, key: char) -> bool {
-    if let Some(key_char) = VIRTUAL_CODES.get(&key) {
-        return is_key_released_for_code(i, *key_char);
-    } 
-    
-    println!("Virtual code is not defined for {}", key);
-    return false;
-}
-
-pub fn is_key_down(i: &InputState, key: char) -> bool {
-    if let Some(key_char) = VIRTUAL_CODES.get(&key) {
-        return is_key_down_for_code(i, *key_char);
-    } 
-    
-    println!("Virtual code is not defined for {}", key);
-    return false;
-}
-
-pub fn is_key_pressed_for_code(i: &InputState, key: Key) -> bool {
-	i.key_pressed(key)
-}
-
-pub fn is_key_released_for_code(i: &InputState, key: Key) -> bool {
-	i.key_released(key)
-}
-
-pub fn is_key_down_for_code(i: &InputState, key: Key) -> bool {
-	i.key_down(key)
-}
 
 
 struct OxidizerApp{
@@ -137,7 +99,7 @@ impl App for OxidizerApp {
         CentralPanel::default().show(ctx, |ui| {
             ui.heading("Press any of these keys to make noise: zsxcfvgbnjmk");
 
-            if ctx.input(|input| input.key_pressed(Key::Escape)) {
+            if ctx.input(|input| keyboard::is_key_pressed_for_code(input, Key::Escape)) {
                 //Todo: quit app
             }
 
@@ -148,7 +110,7 @@ impl App for OxidizerApp {
             let kb_layout = "zsxcfvgbnjmk";
             for i in 0..16 {
                 if let Some(key) = kb_layout.chars().nth(i) {
-                    if ctx.input(|input| is_key_pressed(input, key) || is_key_down(input, key)) {
+                    if ctx.input(|input| keyboard::is_key_pressed(input, key) || keyboard::is_key_down(input, key)) {
                         self.new_keys.push(i as i32);
                         self.add_frequency(i as f32);
                     }
