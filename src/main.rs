@@ -121,7 +121,7 @@ impl OxidizerApp{
             }
 
             let released_copy = self.released_oscillators.clone();
-            for i in 0..released_copy.len() {
+            for i in (0..released_copy.len()).rev() {
                 if released_copy[i].get_amplitude() <= 0.0 {
                     self.released_oscillators.remove(i);
                 }
@@ -140,14 +140,6 @@ impl OxidizerApp{
 
             //println!("start_playing {:?}", self.current_notes);
             println!("combining {} osc", combined.len());
-            
-            // for freq in &self.frequencies {
-            //     let wave_table = self.wave_tables.get_wave_table(&self.selected_wave_type);
-            //     let mut oscillator = WavetableOscillator::new(44100, wave_table);
-            //     oscillator.set_frequency(*freq);
-            //     oscillator.set_gain(-10.0);
-            //     combined.add_oscillator(oscillator);
-            // }
 
             if self.sink.len() > 0 as usize {
                 self.sink.stop();
@@ -160,55 +152,6 @@ impl OxidizerApp{
         } 
     }
 
-    /*
-    fn start_stop_playing1(&mut self){
-        if self.current_notes.len() != self.new_notes.len() {
-            self.restart_playing = true;
-        }
-        else{
-            for i in &self.current_notes {
-                if !self.new_notes.contains(&i) {
-                    self.restart_playing= true;
-                }
-            }
-        }
-        self.current_notes = self.new_notes.clone();
-
-        if self.new_notes.len() == 0 {
-            self.stop_playing = true;
-            self.current_notes.clear();
-        }
-        
-        if self.stop_playing {
-            self.sink.stop();
-            self.sink.clear();
-            self.restart_playing = false;
-        }
-
-        if self.restart_playing {
-            println!("start_playing {:?}", self.current_notes);
-            println!("combining {} freqs", self.frequencies.len());
-
-            let mut combined = CombinedOscillator::new();
-            for freq in &self.frequencies {
-                let wave_table = self.wave_tables.get_wave_table(&self.selected_wave_type);
-                let mut oscillator = WavetableOscillator::new(44100, wave_table);
-                oscillator.set_frequency(*freq);
-                oscillator.set_gain(-10.0);
-                combined.add_oscillator(oscillator);
-            }
-
-            if self.sink.len() > 0 as usize {
-                self.sink.stop();
-                self.sink.clear();
-            }
-
-            self.sink.append(combined);
-            self.sink.play();
-            self.restart_playing = false;
-        } 
-    }
-     */
 
     fn handle_input(&mut self, ctx: &eframe::egui::Context){
         self.new_notes.clear();

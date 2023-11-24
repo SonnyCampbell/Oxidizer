@@ -17,8 +17,8 @@ impl EnvelopeADSR{
             attack_time: 1.0,
             decay_time: 1.0,
             release_time: 2.0,
-            sustain_amplitude: 0.8,
-            start_amplitude: 1.0,
+            sustain_amplitude: 0.1,
+            start_amplitude: 0.11,
             trigger_on_time: 0.0,
             trigger_off_time: 0.0,
             note_pressed: false,
@@ -28,9 +28,9 @@ impl EnvelopeADSR{
     pub fn get_amplitude(&self, time: f32) -> f32 {
         let mut amp = 0.0;
 
-        let lifetime = time - self.trigger_on_time;
-
         if self.note_pressed {
+            let lifetime = time - self.trigger_on_time;
+
             // ADS
             if lifetime <= self.attack_time {
                 // Attack
@@ -47,7 +47,22 @@ impl EnvelopeADSR{
         } 
         else {
             // Release
-            amp = ((time - self.trigger_off_time) / self.release_time) * (0.0 - self.sustain_amplitude) + self.sustain_amplitude;
+            let mut release_amplitude = 0.0;
+            let lifetime = self.trigger_off_time - self.trigger_on_time;
+            // Never reached full amplitude
+            if lifetime <= self.attack_time {
+                release_amplitude = (lifetime / self.attack_time) * self.start_amplitude; 
+            }
+            else if lifetime > self.attack_time && lifetime <= self.decay_time {
+                release_amplitude = ((lifetime - self.attack_time) / self.decay_time) * (self.sustain_amplitude - self.start_amplitude) + self.start_amplitude;
+            }
+            else { // lifetime > self.attack_time + self.decay_time
+                release_amplitude = self.sustain_amplitude;
+            }
+
+            amp = ((time - self.trigger_off_time) / self.release_time) * (0.0 - release_amplitude) + release_amplitude;
+
+            
         }
         
         if amp <= 0.0001 {
