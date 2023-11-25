@@ -1,10 +1,10 @@
 use rodio::Source;
 use std::time::Duration;
 
-use crate::wavetable_oscillator::WavetableOscillator;
-use crate::envelope::EnvelopeADSR;
-use crate::wavetable::WaveTable;
 use crate::time;
+use crate::wavetable::WaveTable;
+use crate::envelope::EnvelopeADSR;
+use crate::wavetable_oscillator::WavetableOscillator;
 
 pub struct GeneralOscillator {
     note_oscillator: WavetableOscillator,

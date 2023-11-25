@@ -1,4 +1,4 @@
-use std::sync::mpsc::*;
+use std::sync::mpsc::Receiver;
 use std::time::Duration;
 use std::collections::HashMap;
 

@@ -1,6 +1,6 @@
 
-use std::f32::consts::PI;
 use std::ops::Index;
+use std::f32::consts::PI;
 
 use crate::wavetype::WaveType;
 

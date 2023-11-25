@@ -1,8 +1,4 @@
-
-use rodio::Source;
-use std::time::Duration;
-
-use crate::wavetable::{WaveTable, self};
+use crate::wavetable::WaveTable;
 
 #[derive(Clone)]
 pub struct WavetableOscillator{
@@ -59,36 +55,10 @@ impl WavetableOscillator {
         let next_index_weight = self.index - truncated_index as f32;
         let truncated_index_weight = 1.0 - next_index_weight;
 
-        // if self.index is 1.25 we do
+        // if self.index is 1.25 we do:
         // wave_table[truncated_index] * 0.75 + wave_table[next_index] * 0.25
         // because the index is nearer to the truncated_index than the next_index
 
         return truncated_index_weight * self.wave_table[truncated_index] + next_index_weight * self.wave_table[next_index];
-    }
-}
-
-impl Iterator for WavetableOscillator {
-    type Item = f32;
-
-    fn next(&mut self) -> Option<f32>{
-        return Some(self.get_sample());
-    }
-}
-
-impl Source for WavetableOscillator {
-    fn channels(&self) -> u16 {
-        return 1;
-    }
-
-    fn sample_rate(&self) -> u32 {
-        return self.sample_rate;
-    }
-
-    fn current_frame_len(&self) -> Option<usize> {
-        return None;
-    }
-
-    fn total_duration(&self) -> Option<Duration> {
-        return None;
     }
 }
