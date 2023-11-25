@@ -1,8 +1,14 @@
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, EnumIter, IntoStaticStr)]
 pub enum WaveType {
-    Sine,
+    Sin,
     Saw,
-    Tri,
+    Triangle,
     Square,
     Pulse
+}
+
+impl Default for WaveType {
+    fn default() -> Self {
+        Self::Sin
+    }
 }

@@ -15,9 +15,9 @@ pub struct WaveTables {
 impl WaveTables {
     pub fn new() -> WaveTables{
         WaveTables { 
-            sin: WaveTable::new(64, WaveType::Sine), 
+            sin: WaveTable::new(64, WaveType::Sin), 
             saw: WaveTable::new(64, WaveType::Saw), 
-            tri: WaveTable::new(64, WaveType::Tri), 
+            tri: WaveTable::new(64, WaveType::Triangle), 
             square: WaveTable::new(64, WaveType::Square), 
             pulse: WaveTable::new(64, WaveType::Pulse), 
         }
@@ -25,9 +25,9 @@ impl WaveTables {
 
     pub fn get_wave_table(&self, wave_type: &WaveType) -> &WaveTable{
         return match wave_type {
-            WaveType::Sine => &self.sin,
+            WaveType::Sin => &self.sin,
             WaveType::Saw => &self.saw,
-            WaveType::Tri => &self.tri,
+            WaveType::Triangle => &self.tri,
             WaveType::Square => &self.square,
             WaveType::Pulse => &self.pulse,
         };
@@ -68,9 +68,9 @@ impl WaveTable {
             let t = n as f32 / wave_table_size as f32;
 
             match self.wave_type {
-                WaveType::Sine => wave_table.push((2.0 * PI * t).sin()),
+                WaveType::Sin => wave_table.push((2.0 * PI * t).sin()),
                 WaveType::Saw => wave_table.push(((t + PI) / PI) % 2.0 - 1.0),
-                WaveType::Tri => wave_table.push(1.0 - (t - 0.5).abs()*4.0),
+                WaveType::Triangle => wave_table.push(1.0 - (t - 0.5).abs()*4.0),
                 WaveType::Square => wave_table.push((2.0 * PI * t).sin().signum()),
                 WaveType::Pulse => {
                     let duty_cycle = 0.2;

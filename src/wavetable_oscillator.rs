@@ -48,6 +48,10 @@ impl WavetableOscillator {
         return sample * self.amplitude;
     }
 
+    pub fn set_wave_table(&mut self, wave_table: &'static WaveTable){
+        self.wave_table = wave_table;
+    }
+
     fn lerp(&self) -> f32 {
         let truncated_index = self.index as usize;
         let next_index = (truncated_index + 1) % self.wave_table.wave_table_size;

@@ -6,7 +6,6 @@ use crate::envelope::EnvelopeADSR;
 use crate::wavetable::WaveTable;
 use crate::time;
 
-#[derive(Clone)]
 pub struct GeneralOscillator {
     note_oscillator: WavetableOscillator,
     envelope: EnvelopeADSR,
@@ -16,12 +15,16 @@ impl GeneralOscillator {
     pub fn new(freq: f32, sample_rate: u32, wavetable: &'static WaveTable) -> GeneralOscillator {
         let mut oscillator = GeneralOscillator{
             note_oscillator: WavetableOscillator::new(sample_rate, wavetable),
-            envelope: EnvelopeADSR::new(),
+            envelope: EnvelopeADSR::new()
         };
 
         oscillator.note_pressed();
         oscillator.note_oscillator.set_frequency(freq);
         return oscillator;
+    }
+
+    pub fn set_wave_table(&mut self, wave_table: &'static WaveTable){
+        self.note_oscillator.set_wave_table(wave_table);
     }
 
     fn note_pressed(&mut self){
@@ -45,6 +48,14 @@ impl Iterator for GeneralOscillator {
     type Item = f32;
 
     fn next(&mut self) -> Option<f32>{
+
+        if self.get_amplitude() <= 0.0 {
+            println!("Finisehd");
+            return None;
+        }
+
+        //println!("Iterating {}", 1);
+
         return Some(self.get_sample());
     }
 }
