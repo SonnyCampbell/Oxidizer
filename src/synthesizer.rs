@@ -16,10 +16,17 @@ lazy_static! {
     static ref WAVE_TABLES: WaveTables = WaveTables::new();
 }
 
+pub enum EnvelopeParam {
+    AttackTime,
+    DecayTime,
+    ReleaseTime
+}
+
 pub enum SynthEvent {
     NotePress (i32),
     NoteRelease (i32),
-    ChangeWaveType (WaveType)
+    ChangeWaveType (WaveType),
+    ChangeEnvelope (EnvelopeParam, f32)
 }
 
 
@@ -28,6 +35,9 @@ pub struct Synthesizer {
     held_oscillators: HashMap<i32, GeneralOscillator>,
     released_oscillators: Vec<GeneralOscillator>,
     wave_type: WaveType,
+    attack: f32,
+    decay: f32,
+    release: f32,
 
     wave_tables: &'static WaveTables,
 }
@@ -39,6 +49,9 @@ impl Synthesizer {
             held_oscillators: HashMap::new(),
             released_oscillators: Vec::new(),
             wave_type: WaveType::default(),
+            attack: 1.0,
+            decay: 1.0,
+            release: 2.0,
 
             wave_tables: &WAVE_TABLES,
         };
@@ -60,8 +73,35 @@ impl Synthesizer {
     fn note_pressed(&mut self, note: i32){
         let freq = Self::get_frequency(note as f32);
         let wave_table = self.wave_tables.get_wave_table(&self.wave_type);
-        let osc = GeneralOscillator::new(freq, 44100, wave_table);
+        let mut osc = GeneralOscillator::new(freq, 44100, wave_table);
+        osc.set_attack_time(self.attack);
+        osc.set_decay_time(self.decay);
+        osc.set_release_time(self.release);
         self.held_oscillators.insert(note, osc);
+    }
+
+    fn set_attack_time(&mut self, attack: f32){
+        self.attack = attack;
+
+        for osc in &mut self.held_oscillators {
+            osc.1.set_attack_time(attack)
+        }
+    }
+
+    fn set_decay_time(&mut self, decay: f32){
+        self.decay = decay;
+
+        for osc in &mut self.held_oscillators {
+            osc.1.set_decay_time(decay)
+        }
+    }
+
+    fn set_release_time(&mut self, release: f32){
+        self.release = release;
+
+        for osc in &mut self.released_oscillators {
+            osc.set_release_time(release);
+        }
     }
 
     fn changed_wave_type(&mut self, wave_type: WaveType){
@@ -83,6 +123,13 @@ impl Synthesizer {
                 SynthEvent::NotePress(note) => self.note_pressed(note),
                 SynthEvent::NoteRelease(note) => self.note_released(note),
                 SynthEvent::ChangeWaveType(wave_type) => self.changed_wave_type(wave_type),
+                SynthEvent::ChangeEnvelope(param, value) => {
+                    match param {
+                        EnvelopeParam::AttackTime => self.set_attack_time(value),
+                        EnvelopeParam::DecayTime => self.set_decay_time(value),
+                        EnvelopeParam::ReleaseTime => self.set_release_time(value),
+                    }
+                },
             }
         }
     }

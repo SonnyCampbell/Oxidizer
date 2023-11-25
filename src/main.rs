@@ -20,12 +20,15 @@ mod wavetype;
 use wavetype::WaveType;
 
 mod synthesizer;
-use synthesizer::{Synthesizer, SynthEvent};
+use synthesizer::{Synthesizer, SynthEvent, EnvelopeParam};
 
 struct OxidizerApp {
     current_notes: Vec<i32>,
     new_notes: Vec<i32>,
     selected_wave_type: WaveType,
+    attack: f32,
+    decay: f32,
+    release: f32,
 
     synth_sender: Sender<SynthEvent>
 }
@@ -36,6 +39,9 @@ impl OxidizerApp{
             current_notes: Vec::new(),
             new_notes: Vec::new(),
             selected_wave_type: WaveType::default(),
+            attack: 1.0,
+            decay: 1.0,
+            release: 2.0,
 
             synth_sender: sender
         }
@@ -68,23 +74,72 @@ impl OxidizerApp{
         self.current_notes = self.new_notes.clone();
     }
 
+    fn render_grid(&mut self, ui: &mut Ui){
+
+        ui.label("Wave Form:");
+
+        ui.horizontal(|ui| {
+            for wave_type in WaveType::iter(){
+                let display_str: &'static str = wave_type.clone().into();
+                if ui.selectable_value(&mut self.selected_wave_type, wave_type.clone(), display_str).changed() {
+                    let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(self.selected_wave_type.clone()));
+                }
+            }
+        });
+        ui.end_row();
+
+        ui.label("Attack:");
+        let slider = Slider::new(&mut self.attack, 0.0..=32.0)
+            .logarithmic(true)
+            .smallest_positive(0.001)
+            .smart_aim(false)
+            .min_decimals(1);
+        
+        if ui.add(slider).changed() {
+            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::AttackTime, self.attack.clone()));
+        }
+        ui.end_row();
+
+        ui.label("Decay:");
+        let slider = Slider::new(&mut self.decay, 0.0..=32.0)
+            .logarithmic(true)
+            .smallest_positive(0.001)
+            .smart_aim(false)
+            .min_decimals(1);
+        
+        if ui.add(slider).changed() {
+            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::DecayTime, self.decay.clone()));
+        }
+        ui.end_row();
+
+        ui.label("Release:");
+        let slider = Slider::new(&mut self.release, 0.0..=32.0)
+            .logarithmic(true)
+            .smallest_positive(0.001)
+            .smart_aim(false)
+            .min_decimals(1);
+        
+        if ui.add(slider).changed() {
+            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::ReleaseTime, self.release.clone()));
+        }
+        ui.end_row();
+
+
+    }
+
     fn render(&mut self, ui: &mut Ui){
         ui.heading("Press any of these keys to make noise: zsxcfvgbnjmk");
 
         ui.separator();
 
+        Grid::new("my_grid")
+            .num_columns(2)
+            .spacing([40.0, 4.0])
+            .striped(true)
+            .show(ui, |ui| {
+                self.render_grid(ui);
+            });
         
-        ui.horizontal(|ui| {
-            ui.label("Wave Form:");
-
-            for wave_type in WaveType::iter(){
-                let display_str: &'static str = wave_type.clone().into();
-                if ui.selectable_value(&mut self.selected_wave_type, wave_type.clone(), display_str).changed() {
-                    let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(wave_type));
-                }
-            }
-        });
-        ui.end_row();
     }
 }
 

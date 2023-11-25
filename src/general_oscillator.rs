@@ -8,7 +8,8 @@ use crate::wavetable_oscillator::WavetableOscillator;
 
 pub struct GeneralOscillator {
     note_oscillator: WavetableOscillator,
-    envelope: EnvelopeADSR,
+    envelope: EnvelopeADSR, //Todo: envelope shouldn't live on the oscillator, 
+    //it should live on the synth and be applied to all notes played by the same oscillator
 }
 
 impl GeneralOscillator {
@@ -41,6 +42,18 @@ impl GeneralOscillator {
 
     pub fn get_sample(&mut self) -> f32 {
         return self.get_amplitude() * self.note_oscillator.get_sample();
+    }
+
+    pub fn set_attack_time(&mut self, attack: f32){
+        self.envelope.set_attack_time(attack);
+    }
+
+    pub fn set_decay_time(&mut self, decay: f32){
+        self.envelope.set_decay_time(decay);
+    }
+
+    pub fn set_release_time(&mut self, release: f32){
+        self.envelope.set_release_time(release);
     }
 }
 

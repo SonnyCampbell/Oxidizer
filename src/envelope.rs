@@ -82,4 +82,16 @@ impl EnvelopeADSR{
         self.trigger_off_time = time_off;
         self.note_pressed = false;
     }
+
+    pub fn set_attack_time(&mut self, attack: f32){
+        self.attack_time = attack;
+    }
+
+    pub fn set_decay_time(&mut self, decay: f32){
+        self.decay_time = decay;
+    }
+
+    pub fn set_release_time(&mut self, release: f32){
+        self.release_time = release;
+    }
 }
