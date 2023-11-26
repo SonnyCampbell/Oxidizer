@@ -3,18 +3,14 @@ use std::time::Duration;
 use std::collections::HashMap;
 
 use rodio::Source;
-use lazy_static::lazy_static;
 
 use crate::wavetype::WaveType;
-use crate::wavetable::WaveTables;
 use crate::general_oscillator::GeneralOscillator;
 
-static SAMPLE_RATE: u32 = 44100;
+static SAMPLE_RATE: f32 = 44100.0;
 static NUM_CHANNELS: u16 = 1;
 
-lazy_static! {
-    static ref WAVE_TABLES: WaveTables = WaveTables::new();
-}
+
 
 pub enum EnvelopeParam {
     AttackTime,
@@ -37,9 +33,7 @@ pub struct Synthesizer {
     wave_type: WaveType,
     attack: f32,
     decay: f32,
-    release: f32,
-
-    wave_tables: &'static WaveTables,
+    release: f32
 }
 
 impl Synthesizer {
@@ -51,9 +45,7 @@ impl Synthesizer {
             wave_type: WaveType::default(),
             attack: 1.0,
             decay: 1.0,
-            release: 2.0,
-
-            wave_tables: &WAVE_TABLES,
+            release: 2.0
         };
     }
 
@@ -72,8 +64,7 @@ impl Synthesizer {
 
     fn note_pressed(&mut self, note: i32){
         let freq = Self::get_frequency(note as f32);
-        let wave_table = self.wave_tables.get_wave_table(&self.wave_type);
-        let mut osc = GeneralOscillator::new(freq, 44100, wave_table);
+        let mut osc = GeneralOscillator::new(freq, SAMPLE_RATE, self.wave_type.clone());
         osc.set_attack_time(self.attack);
         osc.set_decay_time(self.decay);
         osc.set_release_time(self.release);
@@ -106,14 +97,14 @@ impl Synthesizer {
 
     fn changed_wave_type(&mut self, wave_type: WaveType){
         self.wave_type = wave_type;
-        let wave_table = self.wave_tables.get_wave_table(&self.wave_type);
+        //let wave_table = self.wave_tables.get_wave_table(&self.wave_type);
 
         for osc in &mut self.held_oscillators {
-            osc.1.set_wave_table(wave_table)
+            osc.1.set_wave_type(self.wave_type.clone())
         }
 
         for osc in &mut self.released_oscillators {
-            osc.set_wave_table(wave_table);
+            osc.set_wave_type(self.wave_type.clone())
         }
     }
 
@@ -184,7 +175,7 @@ impl Source for Synthesizer {
     }
 
     fn sample_rate(&self) -> u32 {
-        return SAMPLE_RATE;
+        return SAMPLE_RATE as u32;
     }
 
     fn current_frame_len(&self) -> Option<usize> {

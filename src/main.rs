@@ -10,11 +10,10 @@ use strum::IntoEnumIterator;
 
 mod time;
 mod envelope;
-mod wavetable;
 mod keyboard;
 mod virtual_codes;
+mod oscillator;
 mod general_oscillator;
-mod wavetable_oscillator;
 
 mod wavetype;
 use wavetype::WaveType;

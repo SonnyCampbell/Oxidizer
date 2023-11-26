@@ -8,3 +8,7 @@ lazy_static! {
 pub fn get_time() -> f32 {
     START_TIME.elapsed().as_secs_f32()
 }
+
+pub fn get_time_as_ms() -> f32 {
+    START_TIME.elapsed().as_millis() as f32
+}
