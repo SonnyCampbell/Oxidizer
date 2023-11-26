@@ -4,7 +4,7 @@ use crate::time;
 use crate::wavetype::WaveType;
 
 pub struct Oscillator{
-    gain: f32,
+    _gain: f32,
     amplitude: f32,
     frequency: f32,
     wave_type: WaveType,
@@ -23,7 +23,7 @@ impl Oscillator {
 
         return Oscillator { 
             frequency: freq, 
-            gain: gain,
+            _gain: gain,
             amplitude: Self::calculate_amplitude(gain),
             sample_index: 1.0,
             sample_rate: sample_rate,
@@ -38,8 +38,8 @@ impl Oscillator {
         return (10.0 as f32).powf(gain / 20.0);
     }
 
-    pub fn set_gain(&mut self, gain: f32){
-        self.gain = gain;
+    pub fn _set_gain(&mut self, gain: f32){
+        self._gain = gain;
         self.amplitude = Self::calculate_amplitude(gain);
     }
 
