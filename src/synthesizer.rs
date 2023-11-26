@@ -4,15 +4,13 @@ use std::collections::HashMap;
 
 use rodio::Source;
 
+use crate::oscillator::Oscillator;
 use crate::time;
 use crate::envelope::EnvelopeADSR;
 use crate::wavetype::WaveType;
-use crate::general_oscillator::GeneralOscillator;
 
 static SAMPLE_RATE: f32 = 44100.0;
 static NUM_CHANNELS: u16 = 1;
-
-
 
 pub enum EnvelopeParam {
     AttackTime,
@@ -30,8 +28,8 @@ pub enum SynthEvent {
 
 pub struct Synthesizer {
     receiver: Receiver<SynthEvent>,
-    held_oscillators: HashMap<i32, GeneralOscillator>,
-    released_oscillators: Vec<GeneralOscillator>,
+    held_oscillators: HashMap<i32, Oscillator>,
+    released_oscillators: Vec<Oscillator>,
     wave_type: WaveType,
     attack: f32,
     decay: f32,
@@ -69,7 +67,7 @@ impl Synthesizer {
 
     fn note_pressed(&mut self, note: i32){
         let freq = Self::get_frequency(note as f32);
-        let osc = GeneralOscillator::new(freq, SAMPLE_RATE, self.wave_type.clone());
+        let osc = Oscillator::new(freq, SAMPLE_RATE, self.wave_type.clone());
         self.held_oscillators.insert(note, osc);
     }
 

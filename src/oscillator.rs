@@ -1,5 +1,6 @@
 use std::f32::consts::PI;
 
+use crate::time;
 use crate::wavetype::WaveType;
 
 pub struct Oscillator{
@@ -9,7 +10,11 @@ pub struct Oscillator{
     wave_type: WaveType,
 
     sample_index: f32,
-    sample_rate: f32
+    sample_rate: f32,
+
+    pub trigger_on_time: f32,
+    pub trigger_off_time: f32,
+    pub note_pressed: bool
 }
 
 impl Oscillator {
@@ -22,7 +27,10 @@ impl Oscillator {
             amplitude: Self::calculate_amplitude(gain),
             sample_index: 1.0,
             sample_rate: sample_rate,
-            wave_type: wave_type //TODO make a reference to the value on Synth??
+            wave_type: wave_type, //TODO make a reference to the value on Synth??
+            trigger_on_time: time::get_time(),
+            trigger_off_time: 0.0,
+            note_pressed: true,
         };
     }
 
@@ -37,6 +45,11 @@ impl Oscillator {
 
     pub fn set_wave_type(&mut self, wave_type: WaveType){
         self.wave_type = wave_type;
+    }
+
+    pub fn note_released(&mut self){
+        self.trigger_off_time = time::get_time();
+        self.note_pressed = false;
     }
 
     fn t(&self) -> f32 {
