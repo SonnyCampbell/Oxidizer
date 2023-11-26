@@ -33,6 +33,8 @@ pub struct Synthesizer {
     wave_type: WaveType,
 
     envelope: EnvelopeADSR, 
+    lfo_freq: f32,
+    lfo_amplitude: f32
 }
 
 impl Synthesizer {
@@ -42,7 +44,9 @@ impl Synthesizer {
             held_oscillators: HashMap::new(),
             released_oscillators: Vec::new(),
             wave_type: WaveType::default(),
-            envelope: EnvelopeADSR::new()
+            envelope: EnvelopeADSR::new(),
+            lfo_freq: 2.0,
+            lfo_amplitude: 0.04
         };
     }
 
@@ -66,7 +70,7 @@ impl Synthesizer {
     }
 
     fn set_attack_time(&mut self, attack: f32){
-        self.envelope.set_attack_time(attack); // attack/decay/release no longer live on the synth class?
+        self.envelope.set_attack_time(attack);
     }
 
     fn set_decay_time(&mut self, decay: f32){
@@ -112,7 +116,7 @@ impl Synthesizer {
 
         for osc in &mut self.held_oscillators {
             let amplitude = self.envelope.get_amplitude(time, osc.1.trigger_on_time, osc.1.trigger_off_time, osc.1.note_pressed);
-            total += osc.1.get_sample() * amplitude;
+            total += osc.1.get_sample(self.lfo_freq, self.lfo_amplitude) * amplitude;
         }
 
         let mut i = 0;
@@ -122,7 +126,7 @@ impl Synthesizer {
             
             let amplitude = self.envelope.get_amplitude(time, osc.trigger_on_time, osc.trigger_off_time, osc.note_pressed);
             if amplitude > 0.0 {
-                total += osc.get_sample() * amplitude;
+                total += osc.get_sample(self.lfo_freq, self.lfo_amplitude) * amplitude;
             }
             else {
                 finished.push(i);

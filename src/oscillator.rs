@@ -18,11 +18,11 @@ pub struct Oscillator{
 }
 
 impl Oscillator {
-    pub fn new(freq: f32, sample_rate: f32, wave_type: WaveType) -> Oscillator {
+    pub fn new(frequency: f32, sample_rate: f32, wave_type: WaveType) -> Oscillator {
         let gain = 0.0;
 
         return Oscillator { 
-            frequency: freq, 
+            frequency, 
             _gain: gain,
             amplitude: Self::calculate_amplitude(gain),
             sample_index: 1.0,
@@ -56,48 +56,58 @@ impl Oscillator {
         self.sample_index / self.sample_rate
     }
 
-    fn w(&self) -> f32 {
-        self.frequency * 2.0 * PI
+    fn w(&self, frequency: f32) -> f32 {
+        frequency * 2.0 * PI
     }
 
-    fn get_sin_value(&self) -> f32 {
-        (self.w() * self.t()).sin()
+    fn get_sin_value(&self, frequency: f32) -> f32 {
+        frequency.sin()
     }
 
-    fn get_saw_value(&self) -> f32 {
-        (2.0 / PI) * (self.frequency * PI * (self.t() % (1.0 / self.frequency)) - (PI / 2.0))
+    fn get_saw_value(&self, frequency: f32) -> f32 {
+        let freq_in_hz = frequency / (2.0 * PI * self.t());
+
+        (2.0 / PI) * (freq_in_hz * PI * (self.t() % (1.0 / freq_in_hz)) - (PI / 2.0))
     }
 
-    fn get_tri_value(&self) -> f32 {
-        (self.w() * self.t()).sin().asin() * (2.0 / PI)
+    fn get_tri_value(&self, frequency: f32) -> f32 {
+        self.get_sin_value(frequency).asin() * (2.0 / PI)
     }
 
-    fn get_sqr_value(&self) -> f32 {
-        if self.get_sin_value() < 0.0 {
+    fn get_sqr_value(&self, frequency: f32) -> f32 {
+        if self.get_sin_value(frequency) < 0.0 {
             return 1.0;
         }
         
         return -1.0
     }
 
-    fn get_pulse_value(&self) -> f32 {
+    fn get_pulse_value(&self, frequency: f32) -> f32 {
         let duty_cyle = 0.2;
-        if self.get_sin_value() % 1.0 < duty_cyle {
+        if self.get_sin_value(frequency) % 1.0 < duty_cyle {
             return 1.0;
         }
         
         return -1.0
-
     }
 
-    pub fn get_sample(&mut self) -> f32 {
+    fn get_modulated_freq(&self, lfo_freq: f32, lfo_amplitude: f32) -> f32{
+        let base_freq = self.w(self.frequency) * self.t();
+        let lfo_part = lfo_amplitude * self.frequency * (self.w(lfo_freq) * self.t()).sin();
+
+        return base_freq + lfo_part;
+    }
+
+    pub fn get_sample(&mut self, lfo_freq: f32, lfo_amplitude: f32) -> f32 {
+
+        let modulated_freq = self.get_modulated_freq(lfo_freq, lfo_amplitude);
 
         let sample = match self.wave_type {
-            WaveType::Sin => self.get_sin_value(),
-            WaveType::Saw => self.get_saw_value(),
-            WaveType::Triangle => self.get_tri_value(),
-            WaveType::Square => self.get_sqr_value(),
-            WaveType::Pulse => self.get_pulse_value(),
+            WaveType::Sin => self.get_sin_value(modulated_freq),
+            WaveType::Saw => self.get_saw_value(modulated_freq),
+            WaveType::Triangle => self.get_tri_value(modulated_freq),
+            WaveType::Square => self.get_sqr_value(modulated_freq),
+            WaveType::Pulse => self.get_pulse_value(modulated_freq),
         };
 
         self.sample_index += 1.0;
