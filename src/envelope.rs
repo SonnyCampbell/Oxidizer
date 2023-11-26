@@ -1,4 +1,3 @@
-#[derive(Clone)]
 pub struct EnvelopeADSR{
     attack_time: f32,
     decay_time: f32,

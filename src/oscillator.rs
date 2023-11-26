@@ -27,7 +27,7 @@ impl Oscillator {
             amplitude: Self::calculate_amplitude(gain),
             sample_index: 1.0,
             sample_rate: sample_rate,
-            wave_type: wave_type, //TODO make a reference to the value on Synth??
+            wave_type: wave_type, //TODO could I make a reference to the value on Synth?? Lifetime questions...
             trigger_on_time: time::get_time(),
             trigger_off_time: 0.0,
             note_pressed: true,

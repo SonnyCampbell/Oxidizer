@@ -31,9 +31,6 @@ pub struct Synthesizer {
     held_oscillators: HashMap<i32, Oscillator>,
     released_oscillators: Vec<Oscillator>,
     wave_type: WaveType,
-    attack: f32,
-    decay: f32,
-    release: f32,
 
     envelope: EnvelopeADSR, 
 }
@@ -45,9 +42,6 @@ impl Synthesizer {
             held_oscillators: HashMap::new(),
             released_oscillators: Vec::new(),
             wave_type: WaveType::default(),
-            attack: 1.0,
-            decay: 1.0,
-            release: 2.0,
             envelope: EnvelopeADSR::new()
         };
     }
@@ -72,17 +66,14 @@ impl Synthesizer {
     }
 
     fn set_attack_time(&mut self, attack: f32){
-        self.attack = attack;
         self.envelope.set_attack_time(attack); // attack/decay/release no longer live on the synth class?
     }
 
     fn set_decay_time(&mut self, decay: f32){
-        self.decay = decay;
         self.envelope.set_decay_time(decay);
     }
 
     fn set_release_time(&mut self, release: f32){
-        self.release = release;
         self.envelope.set_release_time(release);
     }
 
