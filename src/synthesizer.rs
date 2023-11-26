@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 use rodio::Source;
 
+use crate::time;
+use crate::envelope::EnvelopeADSR;
 use crate::wavetype::WaveType;
 use crate::general_oscillator::GeneralOscillator;
 
@@ -33,7 +35,9 @@ pub struct Synthesizer {
     wave_type: WaveType,
     attack: f32,
     decay: f32,
-    release: f32
+    release: f32,
+
+    envelope: EnvelopeADSR, 
 }
 
 impl Synthesizer {
@@ -45,7 +49,8 @@ impl Synthesizer {
             wave_type: WaveType::default(),
             attack: 1.0,
             decay: 1.0,
-            release: 2.0
+            release: 2.0,
+            envelope: EnvelopeADSR::new()
         };
     }
 
@@ -64,40 +69,27 @@ impl Synthesizer {
 
     fn note_pressed(&mut self, note: i32){
         let freq = Self::get_frequency(note as f32);
-        let mut osc = GeneralOscillator::new(freq, SAMPLE_RATE, self.wave_type.clone());
-        osc.set_attack_time(self.attack);
-        osc.set_decay_time(self.decay);
-        osc.set_release_time(self.release);
+        let osc = GeneralOscillator::new(freq, SAMPLE_RATE, self.wave_type.clone());
         self.held_oscillators.insert(note, osc);
     }
 
     fn set_attack_time(&mut self, attack: f32){
         self.attack = attack;
-
-        for osc in &mut self.held_oscillators {
-            osc.1.set_attack_time(attack)
-        }
+        self.envelope.set_attack_time(attack); // attack/decay/release no longer live on the synth class?
     }
 
     fn set_decay_time(&mut self, decay: f32){
         self.decay = decay;
-
-        for osc in &mut self.held_oscillators {
-            osc.1.set_decay_time(decay)
-        }
+        self.envelope.set_decay_time(decay);
     }
 
     fn set_release_time(&mut self, release: f32){
         self.release = release;
-
-        for osc in &mut self.released_oscillators {
-            osc.set_release_time(release);
-        }
+        self.envelope.set_release_time(release);
     }
 
     fn changed_wave_type(&mut self, wave_type: WaveType){
         self.wave_type = wave_type;
-        //let wave_table = self.wave_tables.get_wave_table(&self.wave_type);
 
         for osc in &mut self.held_oscillators {
             osc.1.set_wave_type(self.wave_type.clone())
@@ -127,17 +119,21 @@ impl Synthesizer {
 
     fn get_combined_sample(&mut self) -> f32 {
         let mut total = 0.0;
+        let time = time::get_time();
 
         for osc in &mut self.held_oscillators {
-            total += osc.1.get_sample();
+            let amplitude = self.envelope.get_amplitude(time, osc.1.trigger_on_time, osc.1.trigger_off_time, osc.1.note_pressed);
+            total += osc.1.get_sample() * amplitude;
         }
 
         let mut i = 0;
         let mut finished: Vec<usize> = Vec::new();
+        
         for osc in &mut self.released_oscillators{
             
-            if osc.get_amplitude() > 0.0 {
-                total += osc.get_sample();
+            let amplitude = self.envelope.get_amplitude(time, osc.trigger_on_time, osc.trigger_off_time, osc.note_pressed);
+            if amplitude > 0.0 {
+                total += osc.get_sample() * amplitude;
             }
             else {
                 finished.push(i);

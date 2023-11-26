@@ -5,10 +5,6 @@ pub struct EnvelopeADSR{
     release_time: f32,
     sustain_amplitude: f32,
     start_amplitude: f32,
-    trigger_on_time: f32,
-    trigger_off_time: f32,
-
-    note_pressed: bool
 }
 
 impl EnvelopeADSR{
@@ -19,17 +15,14 @@ impl EnvelopeADSR{
             release_time: 2.0,
             sustain_amplitude: 0.1,
             start_amplitude: 0.11,
-            trigger_on_time: 0.0,
-            trigger_off_time: 0.0,
-            note_pressed: false,
         }
     }
 
-    pub fn get_amplitude(&self, time: f32) -> f32 {
+    pub fn get_amplitude(&self, time: f32, trigger_on_time: f32, trigger_off_time: f32, note_pressed: bool) -> f32 {
         let mut amp = 0.0;
 
-        if self.note_pressed {
-            let lifetime = time - self.trigger_on_time;
+        if note_pressed {
+            let lifetime = time - trigger_on_time;
 
             // ADS
             if lifetime <= self.attack_time {
@@ -48,7 +41,7 @@ impl EnvelopeADSR{
         else {
             // Release
             let mut release_amplitude = 0.0;
-            let lifetime = self.trigger_off_time - self.trigger_on_time;
+            let lifetime = trigger_off_time - trigger_on_time;
             // Never reached full amplitude
             if lifetime <= self.attack_time {
                 release_amplitude = (lifetime / self.attack_time) * self.start_amplitude; 
@@ -60,7 +53,7 @@ impl EnvelopeADSR{
                 release_amplitude = self.sustain_amplitude;
             }
 
-            amp = ((time - self.trigger_off_time) / self.release_time) * (0.0 - release_amplitude) + release_amplitude;
+            amp = ((time - trigger_off_time) / self.release_time) * (0.0 - release_amplitude) + release_amplitude;
 
             
         }
@@ -71,16 +64,6 @@ impl EnvelopeADSR{
 
 
         return amp;
-    }
-
-    pub fn note_on(&mut self, time_on: f32){
-        self.trigger_on_time = time_on;
-        self.note_pressed = true;
-    }
-
-    pub fn note_off(&mut self, time_off: f32){
-        self.trigger_off_time = time_off;
-        self.note_pressed = false;
     }
 
     pub fn set_attack_time(&mut self, attack: f32){
