@@ -13,6 +13,9 @@ mod envelope;
 mod keyboard;
 mod virtual_codes;
 mod oscillator;
+mod note_generator;
+mod sound_generator;
+mod constants;
 
 mod wavetype;
 use wavetype::WaveType;

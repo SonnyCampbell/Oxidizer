@@ -1,6 +1,5 @@
 use std::f32::consts::PI;
 
-use crate::time;
 use crate::wavetype::WaveType;
 
 pub struct Oscillator{
@@ -12,9 +11,7 @@ pub struct Oscillator{
     sample_index: f32,
     sample_rate: f32,
 
-    pub trigger_on_time: f32,
-    pub trigger_off_time: f32,
-    pub note_pressed: bool
+
 }
 
 impl Oscillator {
@@ -22,34 +19,27 @@ impl Oscillator {
         let gain = 0.0;
 
         return Oscillator { 
-            frequency, 
             _gain: gain,
-            amplitude: Self::calculate_amplitude(gain),
+            frequency, 
+            amplitude: 1.0,
             sample_index: 1.0,
             sample_rate: sample_rate,
             wave_type: wave_type, //TODO could I make a reference to the value on Synth?? Lifetime questions...
-            trigger_on_time: time::get_time(),
-            trigger_off_time: 0.0,
-            note_pressed: true,
+
         };
     }
 
-    fn calculate_amplitude(gain: f32) -> f32 {
+    fn _calculate_amplitude(gain: f32) -> f32 {
         return (10.0 as f32).powf(gain / 20.0);
     }
 
     pub fn _set_gain(&mut self, gain: f32){
         self._gain = gain;
-        self.amplitude = Self::calculate_amplitude(gain);
+        self.amplitude = Self::_calculate_amplitude(gain);
     }
 
     pub fn set_wave_type(&mut self, wave_type: WaveType){
         self.wave_type = wave_type;
-    }
-
-    pub fn note_released(&mut self){
-        self.trigger_off_time = time::get_time();
-        self.note_pressed = false;
     }
 
     fn t(&self) -> f32 {
