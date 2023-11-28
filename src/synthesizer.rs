@@ -6,7 +6,6 @@ use rodio::Source;
 
 use crate::constants::*;
 use crate::envelope::EnvelopeADSR;
-use crate::wavetype::WaveType;
 use crate::sound_generator::SoundGenerator;
 
 
@@ -20,7 +19,7 @@ pub enum EnvelopeParam {
 pub enum SynthEvent {
     NotePress (i32),
     NoteRelease (i32),
-    ChangeWaveType (OscNumber, WaveType),
+    ChangeSoundGenOscParams (SoundGenOscParams),
     ChangeEnvelope (EnvelopeParam, f32)
 }
 
@@ -64,7 +63,7 @@ impl Synthesizer {
             match event {
                 SynthEvent::NotePress(note) => self.sound_generator.note_pressed(note),
                 SynthEvent::NoteRelease(note) => self.sound_generator.note_released(note),
-                SynthEvent::ChangeWaveType(osc_num, wave_type) => self.sound_generator.changed_wave_type(osc_num, wave_type),
+                SynthEvent::ChangeSoundGenOscParams(osc_params) => self.sound_generator.update_oscillator_params(osc_params),
                 SynthEvent::ChangeEnvelope(param, value) => {
                     match param {
                         EnvelopeParam::AttackTime => self.set_attack_time(value),

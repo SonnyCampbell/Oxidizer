@@ -4,27 +4,23 @@ use strum::EnumCount;
 
 use crate::time;
 use crate::envelope::EnvelopeADSR;
-use crate::wavetype::WaveType;
 use crate::note_generator::NoteGenerator;
 use crate::constants::*;
+use crate::wavetype::WaveType;
 
 pub struct SoundGenerator {
     held_notes: HashMap<i32, NoteGenerator>,
     released_notes: Vec<NoteGenerator>,
-    wave_types: [Option<WaveType>; OscNumber::COUNT]
+    generators: [SoundGenOscParams; OscNumber::COUNT]
 }
 
 
 impl SoundGenerator {
     pub fn new() -> SoundGenerator {
-        const INIT: Option<WaveType> = None;
-        let mut wave_types: [Option<WaveType>; OscNumber::COUNT] = [INIT; OscNumber::COUNT];
-        wave_types[0] = Some(WaveType::default());
-
         return SoundGenerator {
             held_notes: HashMap::new(),
             released_notes: Vec::new(),
-            wave_types: wave_types,
+            generators: SoundGenOscParams::create_default_array(),
         }
     }
 
@@ -41,22 +37,48 @@ impl SoundGenerator {
         return base_frequency * twelfth_root_of_two.powf(i as f32);
     }
 
+    fn get_wave_types(&self) -> [Option<WaveType>; OscNumber::COUNT] {
+        let mut wave_types: Vec<Option<WaveType>> = Vec::with_capacity(OscNumber::COUNT);
+
+        for osc in &self.generators {
+            if osc.enabled {
+                wave_types.push(Some(osc.wave_type));
+            } else {
+                wave_types.push(None);
+            }
+        }
+
+        return wave_types.try_into()
+            .unwrap_or_else(|v: Vec<Option<WaveType>>| panic!("Expected a Vec of length {} but it was {}", OscNumber::COUNT, v.len()));
+
+        
+    }
     
     pub fn note_pressed(&mut self, note: i32){
         let freq = Self::get_frequency(note as f32);
-        let note_gen: NoteGenerator = NoteGenerator::new(freq, SAMPLE_RATE, self.wave_types.clone());
+        let note_gen: NoteGenerator = NoteGenerator::new(freq, SAMPLE_RATE, self.get_wave_types());
         self.held_notes.insert(note, note_gen);
     }
 
-    pub fn changed_wave_type(&mut self, osc_num: OscNumber, wave_type: WaveType){
-        self.wave_types[osc_num as usize] = Some(wave_type);
+    pub fn update_oscillator_params(&mut self, osc_params: SoundGenOscParams){
+        let osc = &mut self.generators[osc_params.num as usize];
+
+        osc.enabled = osc_params.enabled;
+        osc.wave_type = osc_params.wave_type;
+        osc.enabled = osc_params.enabled;
+
+        self.update_note_wave_types();
+    }
+
+    fn update_note_wave_types(&mut self){
+        let wave_types = self.get_wave_types();
 
         for note_gen in &mut self.held_notes {
-            note_gen.1.set_wave_type(self.wave_types.clone())
+            note_gen.1.set_wave_type(wave_types)
         }
 
         for note_gen in &mut self.released_notes {
-            note_gen.set_wave_type(self.wave_types.clone())
+            note_gen.set_wave_type(wave_types)
         }
     }
 

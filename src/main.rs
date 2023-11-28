@@ -6,7 +6,7 @@ use eframe::{run_native, App, NativeOptions, egui};
 
 #[macro_use]
 extern crate strum_macros;
-use strum::IntoEnumIterator;
+use strum::{EnumCount, IntoEnumIterator};
 
 mod time;
 mod envelope;
@@ -15,8 +15,10 @@ mod virtual_codes;
 mod oscillator;
 mod note_generator;
 mod sound_generator;
+
+
 mod constants;
-use crate::constants::*;
+use constants::*;
 
 mod wavetype;
 use wavetype::WaveType;
@@ -24,12 +26,11 @@ use wavetype::WaveType;
 mod synthesizer;
 use synthesizer::{Synthesizer, SynthEvent, EnvelopeParam};
 
+
 struct OxidizerApp {
     current_notes: Vec<i32>,
     new_notes: Vec<i32>,
-    selected_wave_type_1: Option<WaveType>,
-    selected_wave_type_2: Option<WaveType>,
-    selected_wave_type_3: Option<WaveType>,
+    sound_gen_oscillators: [SoundGenOscParams; OscNumber::COUNT],
     attack: f32,
     decay: f32,
     release: f32,
@@ -42,9 +43,7 @@ impl OxidizerApp{
         Self { 
             current_notes: Vec::new(),
             new_notes: Vec::new(),
-            selected_wave_type_1: Some(WaveType::default()),
-            selected_wave_type_2: None,
-            selected_wave_type_3: None,
+            sound_gen_oscillators: SoundGenOscParams::create_default_array(),
             attack: 1.0,
             decay: 1.0,
             release: 2.0,
@@ -82,47 +81,21 @@ impl OxidizerApp{
 
     fn render_grid(&mut self, ui: &mut Ui){
 
-        ui.label("Oscillator 1 Wave Form:");
+        for osc_params in &mut self.sound_gen_oscillators {
+            let display_num = osc_params.num as i32 + 1;
+            ui.label(format!("Oscillator {display_num} Wave Form:"));
 
-        ui.horizontal(|ui| {
-            for wave_type in WaveType::iter(){
-                let display_str: &'static str = wave_type.clone().into();
-                if ui.selectable_value(&mut self.selected_wave_type_1, Some(wave_type.clone()), display_str).changed() {
-                    if let Some(wave_type) = &self.selected_wave_type_1 {
-                        let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(OscNumber::Osc1, wave_type.clone()));
+            ui.horizontal(|ui| {
+                for wave_type in WaveType::iter(){
+                    let display_str: &'static str = wave_type.into();
+                    if ui.selectable_value(&mut osc_params.wave_type, wave_type, display_str).changed() {
+                        osc_params.enabled = true;
+                        let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
                     }
                 }
-            }
-        });
-        ui.end_row();
-
-        ui.label("Oscillator 2 Wave Form:");
-
-        ui.horizontal(|ui| {
-            for wave_type in WaveType::iter(){
-                let display_str: &'static str = wave_type.clone().into();
-                if ui.selectable_value(&mut self.selected_wave_type_2, Some(wave_type.clone()), display_str).changed() {
-                    if let Some(wave_type) = &self.selected_wave_type_2 {
-                        let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(OscNumber::Osc2, wave_type.clone()));
-                    }
-                }
-            }
-        });
-        ui.end_row();
-
-        ui.label("Oscillator 3 Wave Form:");
-
-        ui.horizontal(|ui| {
-            for wave_type in WaveType::iter(){
-                let display_str: &'static str = wave_type.clone().into();
-                if ui.selectable_value(&mut self.selected_wave_type_3, Some(wave_type.clone()), display_str).changed() {
-                    if let Some(wave_type) = &self.selected_wave_type_3 {
-                        let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(OscNumber::Osc3, wave_type.clone()));
-                    }
-                }
-            }
-        });
-        ui.end_row();
+            });
+            ui.end_row();
+        }
 
         ui.label("Attack:");
         let slider = Slider::new(&mut self.attack, 0.0..=32.0)
@@ -132,7 +105,7 @@ impl OxidizerApp{
             .min_decimals(1);
         
         if ui.add(slider).changed() {
-            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::AttackTime, self.attack.clone()));
+            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::AttackTime, self.attack));
         }
         ui.end_row();
 
@@ -144,7 +117,7 @@ impl OxidizerApp{
             .min_decimals(1);
         
         if ui.add(slider).changed() {
-            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::DecayTime, self.decay.clone()));
+            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::DecayTime, self.decay));
         }
         ui.end_row();
 
@@ -156,7 +129,7 @@ impl OxidizerApp{
             .min_decimals(1);
         
         if ui.add(slider).changed() {
-            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::ReleaseTime, self.release.clone()));
+            let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::ReleaseTime, self.release));
         }
         ui.end_row();
 
