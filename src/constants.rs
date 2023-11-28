@@ -3,8 +3,8 @@ use strum::{EnumCount, IntoEnumIterator};
 
 use crate::wavetype::WaveType;
 
-pub static SAMPLE_RATE: f32 = 44100.0;
-pub static NUM_CHANNELS: u16 = 1;
+pub const SAMPLE_RATE: f32 = 44100.0;
+pub const NUM_CHANNELS: u16 = 1;
 
 
 #[derive(EnumCount, EnumIter, Copy, Clone)]

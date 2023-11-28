@@ -1,7 +1,6 @@
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
-
 use rodio::Source;
 
 use crate::constants::*;
@@ -28,10 +27,9 @@ pub struct Synthesizer {
     receiver: Receiver<SynthEvent>,
     sound_generator: SoundGenerator,
 
-
     envelope: EnvelopeADSR, 
     lfo_freq: f32,
-    lfo_amplitude: f32
+    lfo_amplitude: f32,
 }
 
 impl Synthesizer {
@@ -42,7 +40,7 @@ impl Synthesizer {
 
             envelope: EnvelopeADSR::new(),
             lfo_freq: 0.0,
-            lfo_amplitude: 0.0
+            lfo_amplitude: 0.0,
         };
     }
 
@@ -79,7 +77,8 @@ impl Synthesizer {
     pub fn get_synth_sample(&mut self) -> f32 {
         self.handle_events();
 
-        return self.sound_generator.get_sample(&self.envelope, self.lfo_freq, self.lfo_amplitude);
+        let sample = self.sound_generator.get_sample(&self.envelope, self.lfo_freq, self.lfo_amplitude);
+        return sample;
     }
 }
 
