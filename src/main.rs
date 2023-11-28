@@ -16,6 +16,7 @@ mod oscillator;
 mod note_generator;
 mod sound_generator;
 mod constants;
+use crate::constants::*;
 
 mod wavetype;
 use wavetype::WaveType;
@@ -26,7 +27,9 @@ use synthesizer::{Synthesizer, SynthEvent, EnvelopeParam};
 struct OxidizerApp {
     current_notes: Vec<i32>,
     new_notes: Vec<i32>,
-    selected_wave_type: WaveType,
+    selected_wave_type_1: Option<WaveType>,
+    selected_wave_type_2: Option<WaveType>,
+    selected_wave_type_3: Option<WaveType>,
     attack: f32,
     decay: f32,
     release: f32,
@@ -39,7 +42,9 @@ impl OxidizerApp{
         Self { 
             current_notes: Vec::new(),
             new_notes: Vec::new(),
-            selected_wave_type: WaveType::default(),
+            selected_wave_type_1: Some(WaveType::default()),
+            selected_wave_type_2: None,
+            selected_wave_type_3: None,
             attack: 1.0,
             decay: 1.0,
             release: 2.0,
@@ -77,13 +82,43 @@ impl OxidizerApp{
 
     fn render_grid(&mut self, ui: &mut Ui){
 
-        ui.label("Wave Form:");
+        ui.label("Oscillator 1 Wave Form:");
 
         ui.horizontal(|ui| {
             for wave_type in WaveType::iter(){
                 let display_str: &'static str = wave_type.clone().into();
-                if ui.selectable_value(&mut self.selected_wave_type, wave_type.clone(), display_str).changed() {
-                    let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(self.selected_wave_type.clone()));
+                if ui.selectable_value(&mut self.selected_wave_type_1, Some(wave_type.clone()), display_str).changed() {
+                    if let Some(wave_type) = &self.selected_wave_type_1 {
+                        let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(OscNumber::Osc1, wave_type.clone()));
+                    }
+                }
+            }
+        });
+        ui.end_row();
+
+        ui.label("Oscillator 2 Wave Form:");
+
+        ui.horizontal(|ui| {
+            for wave_type in WaveType::iter(){
+                let display_str: &'static str = wave_type.clone().into();
+                if ui.selectable_value(&mut self.selected_wave_type_2, Some(wave_type.clone()), display_str).changed() {
+                    if let Some(wave_type) = &self.selected_wave_type_2 {
+                        let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(OscNumber::Osc2, wave_type.clone()));
+                    }
+                }
+            }
+        });
+        ui.end_row();
+
+        ui.label("Oscillator 3 Wave Form:");
+
+        ui.horizontal(|ui| {
+            for wave_type in WaveType::iter(){
+                let display_str: &'static str = wave_type.clone().into();
+                if ui.selectable_value(&mut self.selected_wave_type_3, Some(wave_type.clone()), display_str).changed() {
+                    if let Some(wave_type) = &self.selected_wave_type_3 {
+                        let _ = self.synth_sender.send(SynthEvent::ChangeWaveType(OscNumber::Osc3, wave_type.clone()));
+                    }
                 }
             }
         });

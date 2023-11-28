@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use strum::EnumCount;
+
 use crate::time;
 use crate::envelope::EnvelopeADSR;
 use crate::wavetype::WaveType;
@@ -9,16 +11,20 @@ use crate::constants::*;
 pub struct SoundGenerator {
     held_notes: HashMap<i32, NoteGenerator>,
     released_notes: Vec<NoteGenerator>,
-    wave_type: WaveType,
+    wave_types: [Option<WaveType>; OscNumber::COUNT]
 }
 
 
 impl SoundGenerator {
     pub fn new() -> SoundGenerator {
+        const INIT: Option<WaveType> = None;
+        let mut wave_types: [Option<WaveType>; OscNumber::COUNT] = [INIT; OscNumber::COUNT];
+        wave_types[0] = Some(WaveType::default());
+
         return SoundGenerator {
             held_notes: HashMap::new(),
             released_notes: Vec::new(),
-            wave_type: WaveType::default(),
+            wave_types: wave_types,
         }
     }
 
@@ -38,19 +44,19 @@ impl SoundGenerator {
     
     pub fn note_pressed(&mut self, note: i32){
         let freq = Self::get_frequency(note as f32);
-        let note_gen: NoteGenerator = NoteGenerator::new(freq, SAMPLE_RATE, self.wave_type.clone());
+        let note_gen: NoteGenerator = NoteGenerator::new(freq, SAMPLE_RATE, self.wave_types.clone());
         self.held_notes.insert(note, note_gen);
     }
 
-    pub fn changed_wave_type(&mut self, wave_type: WaveType){
-        self.wave_type = wave_type;
+    pub fn changed_wave_type(&mut self, osc_num: OscNumber, wave_type: WaveType){
+        self.wave_types[osc_num as usize] = Some(wave_type);
 
-        for osc in &mut self.held_notes {
-            osc.1.set_wave_type(self.wave_type.clone())
+        for note_gen in &mut self.held_notes {
+            note_gen.1.set_wave_type(self.wave_types.clone())
         }
 
-        for osc in &mut self.released_notes {
-            osc.set_wave_type(self.wave_type.clone())
+        for note_gen in &mut self.released_notes {
+            note_gen.set_wave_type(self.wave_types.clone())
         }
     }
 
@@ -58,19 +64,19 @@ impl SoundGenerator {
         let mut total = 0.0;
         let time = time::get_time();
 
-        for osc in &mut self.held_notes {
-            let amplitude = envelope.get_amplitude(time, osc.1.trigger_on_time, osc.1.trigger_off_time, osc.1.note_pressed);
-            total += osc.1.get_sample(lfo_freq, lfo_amplitude) * amplitude;
+        for note_gen in &mut self.held_notes {
+            let amplitude = envelope.get_amplitude(time, note_gen.1.trigger_on_time, note_gen.1.trigger_off_time, note_gen.1.note_pressed);
+            total += note_gen.1.get_sample(lfo_freq, lfo_amplitude) * amplitude;
         }
 
         let mut i = 0;
         let mut finished: Vec<usize> = Vec::new();
         
-        for osc in &mut self.released_notes{
+        for note_gen in &mut self.released_notes{
             
-            let amplitude = envelope.get_amplitude(time, osc.trigger_on_time, osc.trigger_off_time, osc.note_pressed);
+            let amplitude = envelope.get_amplitude(time, note_gen.trigger_on_time, note_gen.trigger_off_time, note_gen.note_pressed);
             if amplitude > 0.0 {
-                total += osc.get_sample(lfo_freq, lfo_amplitude) * amplitude;
+                total += note_gen.get_sample(lfo_freq, lfo_amplitude) * amplitude;
             }
             else {
                 finished.push(i);
