@@ -83,20 +83,36 @@ impl OxidizerApp{
 
         for osc_params in &mut self.sound_gen_oscillators {
             let display_num = osc_params.num as i32 + 1;
-            ui.label(format!("Oscillator {display_num} Wave Form:"));
 
-            ui.horizontal(|ui| {
-                for wave_type in WaveType::iter(){
-                    let display_str: &'static str = wave_type.into();
-                    if ui.selectable_value(&mut osc_params.wave_type, wave_type, display_str).changed() {
-                        osc_params.enabled = true;
-                        let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
-                    }
-                }
+            if ui.checkbox(&mut osc_params.enabled, format!("Oscillator {display_num}")).changed() {
+                let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
+            };
+            ui.end_row();
+
+            ui.add_enabled_ui(osc_params.enabled, |panel| {
+                
+                panel.label("Wave Form:");
             });
+
+            ui.add_enabled_ui(osc_params.enabled, |panel| {
+                panel.horizontal(|ui| {
+                    for wave_type in WaveType::iter(){
+                        let display_str: &'static str = wave_type.into();
+                        if ui.selectable_value(&mut osc_params.wave_type, wave_type, display_str).changed() {
+                            let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
+                        }
+                    }
+                });
+            });
+
+            ui.end_row();
+            ui.separator();
             ui.end_row();
         }
 
+
+        ui.label(RichText::new("Envelope").underline());
+        ui.end_row();
         ui.label("Attack:");
         let slider = Slider::new(&mut self.attack, 0.0..=32.0)
             .logarithmic(true)
