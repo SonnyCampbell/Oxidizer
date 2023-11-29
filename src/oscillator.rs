@@ -4,7 +4,7 @@ use crate::constants::*;
 use crate::wavetype::WaveType;
 
 pub struct Oscillator{
-    _gain: f32,
+    gain: f32,
     amplitude: f32,
     frequency: f32,
     wave_type: WaveType,
@@ -17,22 +17,30 @@ impl Oscillator {
         let gain = 0.0;
 
         return Oscillator { 
-            _gain: gain,
+            gain: gain,
             frequency, 
-            amplitude: 1.0,
+            amplitude: Self::calculate_amplitude(gain),
             sample_index: 1.0,
             wave_type: wave_type, //TODO could I make a reference to the value on Synth?? Lifetime questions...
 
         };
     }
 
-    fn _calculate_amplitude(gain: f32) -> f32 {
+    pub fn get_frequency(&self) -> f32 {
+        return self.frequency;
+    }
+
+    pub fn get_amplitude(&self) -> f32 {
+        return self.amplitude;
+    }
+
+    fn calculate_amplitude(gain: f32) -> f32 {
         return (10.0 as f32).powf(gain / 20.0);
     }
 
-    pub fn _set_gain(&mut self, gain: f32){
-        self._gain = gain;
-        self.amplitude = Self::_calculate_amplitude(gain);
+    pub fn set_gain(&mut self, gain: f32){
+        self.gain = gain;
+        self.amplitude = Self::calculate_amplitude(gain);
     }
 
     pub fn set_wave_type(&mut self, wave_type: WaveType){

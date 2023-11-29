@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use strum::EnumCount;
 
+use crate::oscillator::Oscillator;
 use crate::time;
 use crate::envelope::EnvelopeADSR;
 use crate::note_generator::NoteGenerator;
@@ -82,9 +83,17 @@ impl SoundGenerator {
         }
     }
 
-    pub fn get_sample(&mut self, envelope: &EnvelopeADSR, lfo_freq: f32, lfo_amplitude: f32) -> f32 {
+    pub fn get_sample(&mut self, envelope: &EnvelopeADSR, lfo: Option<&Oscillator>) -> f32 {
         let mut total = 0.0;
         let time = time::get_time();
+
+        let mut lfo_freq = 0.0;
+        let mut lfo_amplitude = 0.0;
+
+        if let Some(lfo_osc) = lfo {
+            lfo_freq = lfo_osc.get_frequency();
+            lfo_amplitude = lfo_osc.get_amplitude();
+        } 
 
         for note_gen in &mut self.held_notes {
             let amplitude = envelope.get_amplitude(time, note_gen.1.trigger_on_time, note_gen.1.trigger_off_time, note_gen.1.note_pressed);

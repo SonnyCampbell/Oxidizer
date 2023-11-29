@@ -5,7 +5,9 @@ use rodio::Source;
 
 use crate::constants::*;
 use crate::envelope::EnvelopeADSR;
+use crate::oscillator::Oscillator;
 use crate::sound_generator::SoundGenerator;
+use crate::wavetype::WaveType;
 
 
 
@@ -28,19 +30,19 @@ pub struct Synthesizer {
     sound_generator: SoundGenerator,
 
     envelope: EnvelopeADSR, 
-    lfo_freq: f32,
-    lfo_amplitude: f32,
+    lfo: Oscillator,
 }
 
 impl Synthesizer {
     pub fn new(receiver: Receiver<SynthEvent>) -> Synthesizer {
+        let mut lfo = Oscillator::new(2.0, WaveType::Sin);
+        lfo.set_gain(-50.0);
+
         return Synthesizer{
             receiver: receiver,
             sound_generator: SoundGenerator::new(),
-
             envelope: EnvelopeADSR::new(),
-            lfo_freq: 0.0,
-            lfo_amplitude: 0.0,
+            lfo: lfo
         };
     }
 
@@ -77,7 +79,7 @@ impl Synthesizer {
     pub fn get_synth_sample(&mut self) -> f32 {
         self.handle_events();
 
-        let sample = self.sound_generator.get_sample(&self.envelope, self.lfo_freq, self.lfo_amplitude);
+        let sample = self.sound_generator.get_sample(&self.envelope, Some(&self.lfo));
         return sample;
     }
 }
