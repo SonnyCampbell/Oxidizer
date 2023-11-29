@@ -112,43 +112,51 @@ impl OxidizerApp{
             .response
     }
 
-    fn render_grid(&mut self, ui: &mut Ui){
+    fn render_lfo(&mut self, ui: &mut Ui){
 
-        for osc_params in &mut self.sound_gen_oscillators {
-            let display_num = osc_params.num as i32 + 1;
+        if ui.checkbox(&mut self.lfo.enabled, format!("LFO")).changed() {
+            let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
+        };
+        ui.end_row();
 
-            if ui.checkbox(&mut osc_params.enabled, format!("Oscillator {display_num}")).changed() {
-                let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
-            };
-            ui.end_row();
+        ui.add_enabled_ui(self.lfo.enabled, |panel| {
+            
+            panel.label("Wave Form:");
+        });
 
-            ui.add_enabled_ui(osc_params.enabled, |panel| {
-                
-                panel.label("Wave Form:");
-            });
-
-            ui.add_enabled_ui(osc_params.enabled, |panel| {
-                panel.horizontal(|ui| {
-                    for wave_type in WaveType::iter(){
-                        let display_str: &'static str = wave_type.into();
-                        if ui.selectable_value(&mut osc_params.wave_type, wave_type, display_str).changed() {
-                            let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
-                        }
+        ui.add_enabled_ui(self.lfo.enabled, |panel| {
+            panel.horizontal(|ui| {
+                for wave_type in WaveType::iter(){
+                    let display_str: &'static str = wave_type.into();
+                    if ui.selectable_value(&mut self.lfo.wave_type, wave_type, display_str).changed() {
+                        let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
                     }
-                });
+                }
             });
+        });
+
+        ui.end_row();
+
+        if self.lfo.enabled {
+            Self::plot_oscillator(ui, format!("LFO Wave Form"), &self.lfo.wave_type);
 
             ui.end_row();
 
-            if osc_params.enabled {
-                Self::plot_oscillator(ui, format!("Oscillator {display_num} Wave Form"), &osc_params.wave_type);
-                ui.end_row();
+            ui.label("LFO Frequency:");
+            let slider = Slider::new(&mut self.lfo.frequency, 0.0..=10.0)
+                .fixed_decimals(1);
+            
+            if ui.add(slider).changed() {
+                let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
             }
-
-            ui.separator();
             ui.end_row();
         }
 
+        ui.separator();
+        ui.end_row();
+    }
+
+    fn render_envelope(&mut self, ui: &mut Ui){
 
         ui.label(RichText::new("Envelope").underline());
         ui.end_row();
@@ -190,48 +198,50 @@ impl OxidizerApp{
 
         ui.separator();
         ui.end_row();
+    }
 
-        if ui.checkbox(&mut self.lfo.enabled, format!("LFO")).changed() {
-            let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
-        };
-        ui.end_row();
+    fn render_oscillators(&mut self, ui: &mut Ui){
+        for osc_params in &mut self.sound_gen_oscillators {
+            let display_num = osc_params.num as i32 + 1;
 
-        ui.add_enabled_ui(self.lfo.enabled, |panel| {
-            
-            panel.label("Wave Form:");
-        });
+            if ui.checkbox(&mut osc_params.enabled, format!("Oscillator {display_num}")).changed() {
+                let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
+            };
+            ui.end_row();
 
-        ui.add_enabled_ui(self.lfo.enabled, |panel| {
-            panel.horizontal(|ui| {
-                for wave_type in WaveType::iter(){
-                    let display_str: &'static str = wave_type.into();
-                    if ui.selectable_value(&mut self.lfo.wave_type, wave_type, display_str).changed() {
-                        let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
-                    }
-                }
+            ui.add_enabled_ui(osc_params.enabled, |panel| {
+                
+                panel.label("Wave Form:");
             });
-        });
 
-        ui.end_row();
-
-        if self.lfo.enabled {
-            Self::plot_oscillator(ui, format!("LFO Wave Form"), &self.lfo.wave_type);
+            ui.add_enabled_ui(osc_params.enabled, |panel| {
+                panel.horizontal(|ui| {
+                    for wave_type in WaveType::iter(){
+                        let display_str: &'static str = wave_type.into();
+                        if ui.selectable_value(&mut osc_params.wave_type, wave_type, display_str).changed() {
+                            let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
+                        }
+                    }
+                });
+            });
 
             ui.end_row();
 
-            ui.label("LFO Frequency:");
-            let slider = Slider::new(&mut self.lfo.frequency, 0.0..=30.0)
-                .fixed_decimals(1);
-            
-            if ui.add(slider).changed() {
-                let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
+            if osc_params.enabled {
+                Self::plot_oscillator(ui, format!("Oscillator {display_num} Wave Form"), &osc_params.wave_type);
+                ui.end_row();
             }
+
+            ui.separator();
             ui.end_row();
         }
+    }
 
-        ui.separator();
-        ui.end_row();
+    fn render_grid(&mut self, ui: &mut Ui){
 
+        self.render_oscillators(ui);
+        self.render_envelope(ui);
+        self.render_lfo(ui);
 
     }
 
