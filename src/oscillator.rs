@@ -1,5 +1,6 @@
 use std::f32::consts::PI;
 
+use crate::constants::*;
 use crate::wavetype::WaveType;
 
 pub struct Oscillator{
@@ -9,13 +10,10 @@ pub struct Oscillator{
     wave_type: WaveType,
 
     sample_index: f32,
-    sample_rate: f32,
-
-
 }
 
 impl Oscillator {
-    pub fn new(frequency: f32, sample_rate: f32, wave_type: WaveType) -> Oscillator {
+    pub fn new(frequency: f32, wave_type: WaveType) -> Oscillator {
         let gain = 0.0;
 
         return Oscillator { 
@@ -23,7 +21,6 @@ impl Oscillator {
             frequency, 
             amplitude: 1.0,
             sample_index: 1.0,
-            sample_rate: sample_rate,
             wave_type: wave_type, //TODO could I make a reference to the value on Synth?? Lifetime questions...
 
         };
@@ -43,7 +40,7 @@ impl Oscillator {
     }
 
     fn t(&self) -> f32 {
-        self.sample_index / self.sample_rate
+        self.sample_index / SAMPLE_RATE
     }
 
     fn w(&self, frequency: f32) -> f32 {

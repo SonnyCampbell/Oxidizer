@@ -18,7 +18,7 @@ pub struct NoteGenerator {
 }
 
 impl NoteGenerator {
-    pub fn new(frequency: f32, sample_rate: f32, wave_types: [Option<WaveType>; OscNumber::COUNT]) -> NoteGenerator {
+    pub fn new(frequency: f32, wave_types: [Option<WaveType>; OscNumber::COUNT]) -> NoteGenerator {
         const INIT: Option<Oscillator> = None;
         let mut oscillators: [Option<Oscillator>; OscNumber::COUNT] = [INIT; OscNumber::COUNT];
 
@@ -26,7 +26,7 @@ impl NoteGenerator {
         for opt in wave_types {
             match opt {
                 Some(wave_type) => 
-                    oscillators[i] = Some(Oscillator::new(frequency, sample_rate, wave_type)),
+                    oscillators[i] = Some(Oscillator::new(frequency, wave_type)),
                 None => oscillators[i] = None,
             }
 

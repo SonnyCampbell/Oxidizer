@@ -56,7 +56,7 @@ impl SoundGenerator {
     
     pub fn note_pressed(&mut self, note: i32){
         let freq = Self::get_frequency(note as f32);
-        let note_gen: NoteGenerator = NoteGenerator::new(freq, SAMPLE_RATE, self.get_wave_types());
+        let note_gen: NoteGenerator = NoteGenerator::new(freq, self.get_wave_types());
         self.held_notes.insert(note, note_gen);
     }
 
