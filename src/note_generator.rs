@@ -8,25 +8,56 @@ use crate::oscillator::Oscillator;
 use crate::wavetype::WaveType;
 
 
+pub struct NoteOscillatorParams {
+    wave_type: WaveType,
+    unisons: i32,
+    unison_detune_pct: f32
+}
+
+impl NoteOscillatorParams {
+    pub fn new(wave_type: WaveType, unisons: i32, unison_detune_pct: f32) -> NoteOscillatorParams {
+        return NoteOscillatorParams{
+            wave_type, unisons, unison_detune_pct
+        };
+    }
+}
 
 pub struct NoteGenerator {
     pub trigger_on_time: f32,
     pub trigger_off_time: f32,
     pub note_pressed: bool,
     
-    oscillators: [Option<Oscillator>; OscNumber::COUNT]
+    oscillators: [Option<Vec<Oscillator>>; OscNumber::COUNT]
 }
 
 impl NoteGenerator {
-    pub fn new(frequency: f32, wave_types: [Option<WaveType>; OscNumber::COUNT]) -> NoteGenerator {
-        const INIT: Option<Oscillator> = None;
-        let mut oscillators: [Option<Oscillator>; OscNumber::COUNT] = [INIT; OscNumber::COUNT];
+    pub fn new(note: i32, note_params: [Option<NoteOscillatorParams>; OscNumber::COUNT]) -> NoteGenerator {
+        const INIT: Option<Vec<Oscillator>> = None;
+        let mut oscillators: [Option<Vec<Oscillator>>; OscNumber::COUNT] = [INIT; OscNumber::COUNT];
 
+        
         let mut i = 0;
-        for opt in wave_types {
+        for opt in note_params {
             match opt {
-                Some(wave_type) => 
-                    oscillators[i] = Some(Oscillator::new(frequency, wave_type)),
+                Some(param) => {
+                    let mut osc_vec: Vec<Oscillator> = Vec::new();
+
+                    if param.unisons % 2 == 0 {
+                        let note_detune = param.unison_detune_pct * 2.0; // todo make const
+
+                        let above = Self::get_frequency(note as f32 + note_detune);
+                        osc_vec.push(Oscillator::new(above, param.wave_type));
+
+                        let below = Self::get_frequency(note as f32 - note_detune);
+                        osc_vec.push(Oscillator::new(below, param.wave_type));
+
+                    } else {
+                        let freq = Self::get_frequency(note as f32);
+                        osc_vec.push(Oscillator::new(freq, param.wave_type));
+                    }
+                    
+                    oscillators[i] = Some(osc_vec);
+                },
                 None => oscillators[i] = None,
             }
 
@@ -41,6 +72,12 @@ impl NoteGenerator {
         };
     }
 
+    fn get_frequency(i: f32) -> f32{
+        let base_frequency = 220.0;
+        let twelfth_root_of_two = (2.0 as f32).powf(1.0 / 12.0);
+        return base_frequency * twelfth_root_of_two.powf(i as f32);
+    }
+
     pub fn note_released(&mut self){
         self.trigger_off_time = time::get_time();
         self.note_pressed = false;
@@ -51,7 +88,11 @@ impl NoteGenerator {
         
         for opt in &mut self.oscillators {
             match opt {
-                Some(osc) => total += osc.get_sample(lfo_freq, lfo_amplitude),
+                Some(osc_vec) => {
+                    for osc in osc_vec {
+                        total += osc.get_sample(lfo_freq, lfo_amplitude)
+                    }
+                },
                 None => {},
             } 
         }
@@ -59,14 +100,18 @@ impl NoteGenerator {
         return total;
     }
 
-    pub fn set_wave_type(&mut self, wave_types: [Option<WaveType>; 3]){
+    pub fn set_note_params(&mut self, note_params: &[Option<NoteOscillatorParams>; OscNumber::COUNT]){
         let mut i = 0;
-        for opt in wave_types {
+        for opt in note_params {
             match opt {
-                Some(wave_type) => {
-                    if let Some(osc) = &mut self.oscillators[i] {
-                        osc.set_wave_type(wave_type);
+                Some(param) => {
+                    if let Some(osc_vec) = &mut self.oscillators[i] {
+                        for osc in osc_vec {
+                            osc.set_wave_type(param.wave_type);
+                        }
+                        // todo : update unisons
                     }
+                    
                 },
                 None => {},
             }

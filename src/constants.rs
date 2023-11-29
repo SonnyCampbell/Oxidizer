@@ -25,7 +25,9 @@ pub struct LfoParams {
 pub struct SoundGenOscParams {
     pub num: OscNumber,
     pub enabled: bool,
-    pub wave_type: WaveType
+    pub wave_type: WaveType,
+    pub unisons: i32,
+    pub unison_detune_pct: f32
 }
 
 impl SoundGenOscParams {
@@ -36,7 +38,9 @@ impl SoundGenOscParams {
             let osc = SoundGenOscParams {
                 num: osc_num,
                 enabled: i == 0,
-                wave_type: WaveType::default()
+                wave_type: WaveType::default(),
+                unisons: 2,
+                unison_detune_pct: 1.0
             };
 
             sound_gen_oscillators.push(osc);

@@ -5,9 +5,8 @@ use strum::EnumCount;
 use crate::oscillator::Oscillator;
 use crate::time;
 use crate::envelope::EnvelopeADSR;
-use crate::note_generator::NoteGenerator;
+use crate::note_generator::{NoteGenerator, NoteOscillatorParams};
 use crate::constants::*;
-use crate::wavetype::WaveType;
 
 pub struct SoundGenerator {
     held_notes: HashMap<i32, NoteGenerator>,
@@ -32,32 +31,28 @@ impl SoundGenerator {
         }
     }
 
-    fn get_frequency(i: f32) -> f32{
-        let base_frequency = 220.0;
-        let twelfth_root_of_two = (2.0 as f32).powf(1.0 / 12.0);
-        return base_frequency * twelfth_root_of_two.powf(i as f32);
-    }
 
-    fn get_wave_types(&self) -> [Option<WaveType>; OscNumber::COUNT] {
-        let mut wave_types: Vec<Option<WaveType>> = Vec::with_capacity(OscNumber::COUNT);
+
+    fn get_note_params(&self) -> [Option<NoteOscillatorParams>; OscNumber::COUNT] {
+        let mut osc_params: Vec<Option<NoteOscillatorParams>> = Vec::with_capacity(OscNumber::COUNT);
 
         for osc in &self.generators {
             if osc.enabled {
-                wave_types.push(Some(osc.wave_type));
+                osc_params.push(Some(NoteOscillatorParams::new(osc.wave_type, osc.unisons, osc.unison_detune_pct)));
             } else {
-                wave_types.push(None);
+                osc_params.push(None);
             }
         }
 
-        return wave_types.try_into()
-            .unwrap_or_else(|v: Vec<Option<WaveType>>| panic!("Expected a Vec of length {} but it was {}", OscNumber::COUNT, v.len()));
+        return osc_params.try_into()
+            .unwrap_or_else(|v: Vec<Option<NoteOscillatorParams>>| 
+                panic!("Expected a Vec of length {} but it was {}", OscNumber::COUNT, v.len()));
 
         
     }
     
     pub fn note_pressed(&mut self, note: i32){
-        let freq = Self::get_frequency(note as f32);
-        let note_gen: NoteGenerator = NoteGenerator::new(freq, self.get_wave_types());
+        let note_gen: NoteGenerator = NoteGenerator::new(note, self.get_note_params());
         self.held_notes.insert(note, note_gen);
     }
 
@@ -66,20 +61,21 @@ impl SoundGenerator {
 
         osc.enabled = osc_params.enabled;
         osc.wave_type = osc_params.wave_type;
-        osc.enabled = osc_params.enabled;
+        osc.unisons = osc_params.unisons;
+        osc.unison_detune_pct = osc_params.unison_detune_pct;
 
-        self.update_note_wave_types();
+        self.update_note_params();
     }
 
-    fn update_note_wave_types(&mut self){
-        let wave_types = self.get_wave_types();
+    fn update_note_params(&mut self){
+        let note_params = self.get_note_params();
 
         for note_gen in &mut self.held_notes {
-            note_gen.1.set_wave_type(wave_types)
+            note_gen.1.set_note_params(&note_params)
         }
 
         for note_gen in &mut self.released_notes {
-            note_gen.set_wave_type(wave_types)
+            note_gen.set_note_params(&note_params)
         }
     }
 

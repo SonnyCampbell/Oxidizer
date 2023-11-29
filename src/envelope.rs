@@ -9,9 +9,9 @@ pub struct EnvelopeADSR{
 impl EnvelopeADSR{
     pub fn new() -> EnvelopeADSR {
         return EnvelopeADSR{
-            attack_time: 1.0,
+            attack_time: 0.1,
             decay_time: 1.0,
-            release_time: 2.0,
+            release_time: 0.1,
             sustain_amplitude: 0.1,
             start_amplitude: 0.11,
         }

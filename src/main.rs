@@ -47,9 +47,9 @@ impl OxidizerApp{
             current_notes: Vec::new(),
             new_notes: Vec::new(),
             sound_gen_oscillators: SoundGenOscParams::create_default_array(),
-            attack: 1.0,
+            attack: 0.1,
             decay: 1.0,
-            release: 2.0,
+            release: 0.1,
             lfo: Default::default(),
             synth_sender: sender
         }
@@ -297,7 +297,7 @@ fn main() -> Result<(), eframe::Error> {
             // This gives us image support:
             //egui_extras::install_image_loaders(&cc.egui_ctx);
             let app = OxidizerApp::default(ui_sender);
-            return Box::<OxidizerApp>::new(app);
+            return Box::new(app);
         }));
     
 }
