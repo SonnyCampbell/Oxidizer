@@ -36,6 +36,7 @@ struct OxidizerApp {
     attack: f32,
     decay: f32,
     release: f32,
+    lfo: LfoParams,
 
     synth_sender: Sender<SynthEvent>
 }
@@ -49,6 +50,7 @@ impl OxidizerApp{
             attack: 1.0,
             decay: 1.0,
             release: 2.0,
+            lfo: Default::default(),
             synth_sender: sender
         }
     }
@@ -139,7 +141,7 @@ impl OxidizerApp{
             ui.end_row();
 
             if osc_params.enabled {
-                Self::plot_oscillator(ui, format!("Osc {display_num}"), &osc_params.wave_type);
+                Self::plot_oscillator(ui, format!("Oscillator {display_num} Wave Form"), &osc_params.wave_type);
                 ui.end_row();
             }
 
@@ -184,6 +186,50 @@ impl OxidizerApp{
         if ui.add(slider).changed() {
             let _ = self.synth_sender.send(SynthEvent::ChangeEnvelope(EnvelopeParam::ReleaseTime, self.release));
         }
+        ui.end_row();
+
+        ui.separator();
+        ui.end_row();
+
+        if ui.checkbox(&mut self.lfo.enabled, format!("LFO")).changed() {
+            let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
+        };
+        ui.end_row();
+
+        ui.add_enabled_ui(self.lfo.enabled, |panel| {
+            
+            panel.label("Wave Form:");
+        });
+
+        ui.add_enabled_ui(self.lfo.enabled, |panel| {
+            panel.horizontal(|ui| {
+                for wave_type in WaveType::iter(){
+                    let display_str: &'static str = wave_type.into();
+                    if ui.selectable_value(&mut self.lfo.wave_type, wave_type, display_str).changed() {
+                        let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
+                    }
+                }
+            });
+        });
+
+        ui.end_row();
+
+        if self.lfo.enabled {
+            Self::plot_oscillator(ui, format!("LFO Wave Form"), &self.lfo.wave_type);
+
+            ui.end_row();
+
+            ui.label("LFO Frequency:");
+            let slider = Slider::new(&mut self.lfo.frequency, 0.0..=30.0)
+                .fixed_decimals(1);
+            
+            if ui.add(slider).changed() {
+                let _ = self.synth_sender.send(SynthEvent::ChangeLfoParams(self.lfo.clone()));
+            }
+            ui.end_row();
+        }
+
+        ui.separator();
         ui.end_row();
 
 

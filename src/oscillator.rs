@@ -30,6 +30,10 @@ impl Oscillator {
         return self.frequency;
     }
 
+    pub fn set_frequency(&mut self, frequency: f32) {
+        self.frequency = frequency;
+    }
+
     pub fn get_amplitude(&self) -> f32 {
         return self.amplitude;
     }

@@ -14,6 +14,13 @@ pub enum OscNumber {
     Osc3,
 }
 
+#[derive(Default, Clone)]
+pub struct LfoParams {
+    pub enabled: bool,
+    pub wave_type: WaveType,
+    pub frequency: f32
+}
+
 #[derive(Clone)]
 pub struct SoundGenOscParams {
     pub num: OscNumber,

@@ -21,7 +21,8 @@ pub enum SynthEvent {
     NotePress (i32),
     NoteRelease (i32),
     ChangeSoundGenOscParams (SoundGenOscParams),
-    ChangeEnvelope (EnvelopeParam, f32)
+    ChangeEnvelope (EnvelopeParam, f32),
+    ChangeLfoParams (LfoParams)
 }
 
 
@@ -36,7 +37,7 @@ pub struct Synthesizer {
 impl Synthesizer {
     pub fn new(receiver: Receiver<SynthEvent>) -> Synthesizer {
         let mut lfo = Oscillator::new(2.0, WaveType::Sin);
-        lfo.set_gain(-50.0);
+        lfo.set_gain(f32::MIN);
 
         return Synthesizer{
             receiver: receiver,
@@ -69,6 +70,16 @@ impl Synthesizer {
                         EnvelopeParam::AttackTime => self.set_attack_time(value),
                         EnvelopeParam::DecayTime => self.set_decay_time(value),
                         EnvelopeParam::ReleaseTime => self.set_release_time(value),
+                    }
+                },
+                SynthEvent::ChangeLfoParams(lfo_params) => {
+                    self.lfo.set_wave_type(lfo_params.wave_type);
+                    self.lfo.set_frequency(lfo_params.frequency);
+                    
+                    if !lfo_params.enabled {
+                        self.lfo.set_gain(f32::MIN);
+                    } else {
+                        self.lfo.set_gain(-25.0);
                     }
                 },
             }
