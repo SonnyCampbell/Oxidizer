@@ -228,6 +228,32 @@ impl OxidizerApp{
             ui.end_row();
 
             if osc_params.enabled {
+
+                ui.label("Unisons:");
+                ui.group(|ui| {
+                    let slider = Slider::new(&mut osc_params.unisons, 1..=16)
+                        .integer()
+                        .custom_formatter(|n, _| {
+                            format!("{n}v")
+                        });
+                    
+                    if ui.add(slider).changed() {
+                        let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
+                    }
+
+                    let slider = Slider::new(&mut osc_params.unison_detune_pct, 0.0..=1.0)
+                        .fixed_decimals(2)
+                        .custom_formatter(|n, _| {
+                            let i = (n * 100.0).round() as i64;
+                            format!("{i}%")
+                        });
+                    
+                    if ui.add(slider).changed() {
+                        let _ = self.synth_sender.send(SynthEvent::ChangeSoundGenOscParams(osc_params.clone()));
+                    }
+                });
+                ui.end_row();
+
                 Self::plot_oscillator(ui, format!("Oscillator {display_num} Wave Form"), &osc_params.wave_type);
                 ui.end_row();
             }

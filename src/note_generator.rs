@@ -1,5 +1,3 @@
-
-
 use strum::EnumCount;
 
 use crate::constants::OscNumber;
@@ -7,6 +5,8 @@ use crate::time;
 use crate::oscillator::Oscillator;
 use crate::wavetype::WaveType;
 
+
+const UNISON_MAX_NOTE_DETUNE: f32 = 2.0;
 
 pub struct NoteOscillatorParams {
     wave_type: WaveType,
@@ -37,25 +37,25 @@ impl NoteGenerator {
 
         
         let mut i = 0;
-        for opt in note_params {
+        for opt in note_params { //todo: use enumerate to get index
             match opt {
                 Some(param) => {
                     let mut osc_vec: Vec<Oscillator> = Vec::new();
 
                     if param.unisons % 2 == 0 {
-                        let note_detune = param.unison_detune_pct * 2.0; // todo make const
-
-                        let above = Self::get_frequency(note as f32 + note_detune);
-                        osc_vec.push(Oscillator::new(above, param.wave_type));
-
-                        let below = Self::get_frequency(note as f32 - note_detune);
-                        osc_vec.push(Oscillator::new(below, param.wave_type));
+                        let unisons_to_add = param.unisons / 2;
+                        Self::add_unison_oscillators(&mut osc_vec, note, unisons_to_add, param.unison_detune_pct, param.wave_type);
 
                     } else {
                         let freq = Self::get_frequency(note as f32);
                         osc_vec.push(Oscillator::new(freq, param.wave_type));
+
+                        if param.unisons > 1 {
+                            let unisons_to_add = (param.unisons - 1) / 2;
+                            Self::add_unison_oscillators(&mut osc_vec, note, unisons_to_add, param.unison_detune_pct, param.wave_type);
+                        }
                     }
-                    
+
                     oscillators[i] = Some(osc_vec);
                 },
                 None => oscillators[i] = None,
@@ -70,6 +70,19 @@ impl NoteGenerator {
             note_pressed: true,
             oscillators: oscillators,
         };
+    }
+
+    
+    fn add_unison_oscillators(osc_vec: &mut Vec<Oscillator>, note: i32, unisons_to_add: i32, detune_pct: f32, wave_type: WaveType){
+        for i in 0..unisons_to_add {
+            let note_detune = detune_pct * UNISON_MAX_NOTE_DETUNE / (2.0 as f32).powi(i);
+
+            let above = Self::get_frequency(note as f32 + note_detune);
+            osc_vec.push(Oscillator::new(above, wave_type));
+
+            let below = Self::get_frequency(note as f32 - note_detune);
+            osc_vec.push(Oscillator::new(below, wave_type));
+        }
     }
 
     fn get_frequency(i: f32) -> f32{
@@ -109,7 +122,7 @@ impl NoteGenerator {
                         for osc in osc_vec {
                             osc.set_wave_type(param.wave_type);
                         }
-                        // todo : update unisons
+                        // todo: update unisons
                     }
                     
                 },

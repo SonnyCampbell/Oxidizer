@@ -39,8 +39,8 @@ impl SoundGenOscParams {
                 num: osc_num,
                 enabled: i == 0,
                 wave_type: WaveType::default(),
-                unisons: 2,
-                unison_detune_pct: 1.0
+                unisons: 1,
+                unison_detune_pct: 0.2
             };
 
             sound_gen_oscillators.push(osc);
