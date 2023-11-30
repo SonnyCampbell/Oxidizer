@@ -78,12 +78,17 @@ impl SoundGenerator {
     fn update_note_params(&mut self, osc_num: usize){
         let note_params = self.get_note_params_for_osc(osc_num);
 
-        for note_gen in &mut self.held_notes {
-            note_gen.1.set_note_params(osc_num, &note_params);
-        }
-
-        for note_gen in &mut self.released_notes {
-            note_gen.set_note_params(osc_num, &note_params);
+        match note_params {
+            Some(param) => {
+                for note_gen in &mut self.held_notes {
+                    note_gen.1.set_note_params(osc_num, &param);
+                }
+        
+                for note_gen in &mut self.released_notes {
+                    note_gen.set_note_params(osc_num, &param);
+                }
+            },
+            None => {},
         }
     }
 

@@ -13,17 +13,21 @@ pub struct Oscillator{
 }
 
 impl Oscillator {
-    pub fn new(frequency: f32, wave_type: WaveType) -> Oscillator {
+    pub fn new(frequency: f32, wave_type: WaveType, starting_sample_index: f32) -> Oscillator {
         let gain = 0.0;
 
         return Oscillator { 
             gain: gain,
             frequency, 
             amplitude: Self::calculate_amplitude(gain),
-            sample_index: 1.0,
+            sample_index: starting_sample_index,
             wave_type: wave_type, //TODO could I make a reference to the value on Synth?? Lifetime questions...
 
         };
+    }
+
+    pub fn get_sample_index(&self) -> f32 {
+        return self.sample_index;
     }
 
     pub fn get_frequency(&self) -> f32 {

@@ -36,7 +36,7 @@ pub struct Synthesizer {
 
 impl Synthesizer {
     pub fn new(receiver: Receiver<SynthEvent>) -> Synthesizer {
-        let mut lfo = Oscillator::new(2.0, WaveType::Sin);
+        let mut lfo = Oscillator::new(2.0, WaveType::Sin, 0.0);
         lfo.set_gain(f32::MIN);
 
         return Synthesizer{
