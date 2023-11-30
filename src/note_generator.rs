@@ -36,8 +36,8 @@ impl NoteGenerator {
         let mut oscillators: [Option<Vec<Oscillator>>; OscNumber::COUNT] = [INIT; OscNumber::COUNT];
 
         
-        let mut i = 0;
-        for opt in note_params { //todo: use enumerate to get index
+        
+        for (osc_num, opt) in note_params.iter().enumerate() { 
             match opt {
                 Some(param) => {
                     let mut osc_vec: Vec<Oscillator> = Vec::new();
@@ -56,12 +56,10 @@ impl NoteGenerator {
                         }
                     }
 
-                    oscillators[i] = Some(osc_vec);
+                    oscillators[osc_num] = Some(osc_vec);
                 },
-                None => oscillators[i] = None,
+                None => oscillators[osc_num] = None,
             }
-
-            i += 1;
         }
 
         return NoteGenerator{
@@ -114,11 +112,10 @@ impl NoteGenerator {
     }
 
     pub fn set_note_params(&mut self, note_params: &[Option<NoteOscillatorParams>; OscNumber::COUNT]){
-        let mut i = 0;
-        for opt in note_params {
+        for (osc_num, opt) in note_params.iter().enumerate() {
             match opt {
                 Some(param) => {
-                    if let Some(osc_vec) = &mut self.oscillators[i] {
+                    if let Some(osc_vec) = &mut self.oscillators[osc_num] {
                         for osc in osc_vec {
                             osc.set_wave_type(param.wave_type);
                         }
@@ -128,8 +125,6 @@ impl NoteGenerator {
                 },
                 None => {},
             }
-
-            i += 1;
         }
     }
     

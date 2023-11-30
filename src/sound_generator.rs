@@ -67,6 +67,7 @@ impl SoundGenerator {
         self.update_note_params();
     }
 
+    // todo: refactor: we only need to do this for the oscillator that had its params updated
     fn update_note_params(&mut self){
         let note_params = self.get_note_params();
 
