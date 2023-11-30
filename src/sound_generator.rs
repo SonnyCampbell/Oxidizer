@@ -46,9 +46,17 @@ impl SoundGenerator {
 
         return osc_params.try_into()
             .unwrap_or_else(|v: Vec<Option<NoteOscillatorParams>>| 
-                panic!("Expected a Vec of length {} but it was {}", OscNumber::COUNT, v.len()));
+                panic!("Expected a Vec of length {} but it was {}", OscNumber::COUNT, v.len()));  
+    }
 
-        
+    fn get_note_params_for_osc(&self, osc_num: usize) -> Option<NoteOscillatorParams> {
+        let osc = &self.generators[osc_num];
+
+        if !osc.enabled {
+            return None;
+        }
+
+        return Some(NoteOscillatorParams::new(osc.wave_type, osc.unisons, osc.unison_detune_pct));
     }
     
     pub fn note_pressed(&mut self, note: i32){
@@ -64,19 +72,18 @@ impl SoundGenerator {
         osc.unisons = osc_params.unisons;
         osc.unison_detune_pct = osc_params.unison_detune_pct;
 
-        self.update_note_params();
+        self.update_note_params(osc_params.num as usize);
     }
 
-    // todo: refactor: we only need to do this for the oscillator that had its params updated
-    fn update_note_params(&mut self){
-        let note_params = self.get_note_params();
+    fn update_note_params(&mut self, osc_num: usize){
+        let note_params = self.get_note_params_for_osc(osc_num);
 
         for note_gen in &mut self.held_notes {
-            note_gen.1.set_note_params(&note_params)
+            note_gen.1.set_note_params(osc_num, &note_params);
         }
 
         for note_gen in &mut self.released_notes {
-            note_gen.set_note_params(&note_params)
+            note_gen.set_note_params(osc_num, &note_params);
         }
     }
 

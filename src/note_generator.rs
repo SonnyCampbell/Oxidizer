@@ -111,19 +111,14 @@ impl NoteGenerator {
         return total;
     }
 
-    pub fn set_note_params(&mut self, note_params: &[Option<NoteOscillatorParams>; OscNumber::COUNT]){
-        for (osc_num, opt) in note_params.iter().enumerate() {
-            match opt {
-                Some(param) => {
-                    if let Some(osc_vec) = &mut self.oscillators[osc_num] {
-                        for osc in osc_vec {
-                            osc.set_wave_type(param.wave_type);
-                        }
-                        // todo: update unisons
-                    }
-                    
-                },
-                None => {},
+    pub fn set_note_params(&mut self,  osc_num: usize, note_params: &Option<NoteOscillatorParams>){
+        if let Some(param) = note_params {
+            if let Some(osc_vec) = &mut self.oscillators[osc_num] {
+                for osc in osc_vec {
+                    osc.set_wave_type(param.wave_type);
+                    // todo: update unisons
+                }
+                
             }
         }
     }
