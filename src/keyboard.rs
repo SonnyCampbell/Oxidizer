@@ -1,5 +1,5 @@
 
-use crate::egui::{Key, InputState};
+use egui::{Key, InputState};
 use crate::virtual_codes::VIRTUAL_CODES;
 
 pub fn is_key_pressed(i: &InputState, key: char) -> bool {

@@ -1,4 +1,4 @@
-use crate::egui::Key;
+use egui::Key;
 use ::phf::{Map, phf_map};
 
 pub static VIRTUAL_CODES: Map<char, Key> = phf_map! {

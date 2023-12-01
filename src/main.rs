@@ -5,29 +5,12 @@ use egui_plot::{Line, Plot, PlotPoints};
 use rodio::{OutputStream, Sink};
 use eframe::{run_native, App, NativeOptions, egui};
 
-#[macro_use]
-extern crate strum_macros;
 use strum::{EnumCount, IntoEnumIterator};
 
-mod time;
-mod envelope;
-mod keyboard;
-mod virtual_codes;
-mod oscillator;
-mod note_generator;
-mod sound_generator;
-mod wavetables;
-use wavetables::*;
-
-mod constants;
-use constants::*;
-
-mod wavetype;
-use wavetype::WaveType;
-
-mod synthesizer;
-use synthesizer::{Synthesizer, SynthEvent, EnvelopeParam};
-
+use oxidizer::wavetables::*;
+use oxidizer::constants::*;
+use oxidizer::wavetype::WaveType;
+use oxidizer::synthesizer::{Synthesizer, SynthEvent, EnvelopeParam};
 
 struct OxidizerApp {
     current_notes: Vec<i32>,
@@ -61,7 +44,9 @@ impl OxidizerApp{
         let kb_layout = "zsxcfvgbnjmk";
         for i in 0..16 {
             if let Some(key) = kb_layout.chars().nth(i) {
-                if ctx.input(|input| keyboard::is_key_pressed(input, key) || keyboard::is_key_down(input, key)) {
+                if ctx.input(|input| 
+                        oxidizer::keyboard::is_key_pressed(input, key) || 
+                        oxidizer::keyboard::is_key_down(input, key)) {
                     self.new_notes.push(i as i32);
                 }
             }
@@ -292,7 +277,7 @@ impl App for OxidizerApp {
         CentralPanel::default().show(ctx, |ui| {
             self.render(ui);
 
-            if ctx.input(|input| keyboard::is_key_pressed_for_code(input, Key::Escape)) {
+            if ctx.input(|input| oxidizer::keyboard::is_key_pressed_for_code(input, Key::Escape)) {
                 //Todo: quit app
             }
 
@@ -313,6 +298,7 @@ fn main() -> Result<(), eframe::Error> {
 
     sink.append(synth);
     sink.play();
+    
 
     env_logger::init(); 
     let options = NativeOptions::default();
