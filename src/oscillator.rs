@@ -114,6 +114,7 @@ impl Oscillator {
         };
 
         self.sample_index += 1.0;
+        self.sample_index %= SAMPLE_RATE;
 
         return sample * self.amplitude;
     }
