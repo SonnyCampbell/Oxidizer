@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use strum::EnumCount;
 
@@ -10,7 +10,8 @@ use crate::constants::*;
 
 pub struct SoundGenerator {
     held_notes: HashMap<i32, NoteGenerator>,
-    released_notes: Vec<NoteGenerator>,
+    released_notes: VecDeque<NoteGenerator>,
+    finished_playing: Vec<usize>,
     generators: [SoundGenOscParams; OscNumber::COUNT]
 }
 
@@ -18,8 +19,9 @@ pub struct SoundGenerator {
 impl SoundGenerator {
     pub fn new() -> SoundGenerator {
         return SoundGenerator {
-            held_notes: HashMap::new(),
-            released_notes: Vec::new(),
+            held_notes: HashMap::with_capacity(MAX_NOTES),
+            released_notes: VecDeque::with_capacity(MAX_NOTES),
+            finished_playing: Vec::with_capacity(MAX_NOTES),
             generators: SoundGenOscParams::create_default_array(),
         }
     }
@@ -27,26 +29,29 @@ impl SoundGenerator {
     pub fn note_released(&mut self, note: i32){
         if let Some(mut removed) = self.held_notes.remove(&note) {
             removed.note_released();
-            self.released_notes.push(removed);
+
+            if self.released_notes.len() >= MAX_NOTES {
+                self.released_notes.pop_front();
+            }
+
+            self.released_notes.push_back(removed);
+            
         }
     }
 
-
-
     fn get_note_params(&self) -> [Option<NoteOscillatorParams>; OscNumber::COUNT] {
-        let mut osc_params: Vec<Option<NoteOscillatorParams>> = Vec::with_capacity(OscNumber::COUNT);
+        const INIT: Option<NoteOscillatorParams> = None;
+        let mut osc_params: [Option<NoteOscillatorParams>; OscNumber::COUNT] = [INIT; OscNumber::COUNT];
 
-        for osc in &self.generators {
+        for (i, osc) in self.generators.iter().enumerate() {
             if osc.enabled {
-                osc_params.push(Some(NoteOscillatorParams::new(osc.wave_type, osc.unisons, osc.unison_detune_pct)));
+                osc_params[i] = Some(NoteOscillatorParams::new(osc.wave_type, osc.unisons, osc.unison_detune_pct));
             } else {
-                osc_params.push(None);
+                osc_params[i] = None;
             }
         }
 
-        return osc_params.try_into()
-            .unwrap_or_else(|v: Vec<Option<NoteOscillatorParams>>| 
-                panic!("Expected a Vec of length {} but it was {}", OscNumber::COUNT, v.len()));  
+        return osc_params;  
     }
 
     fn get_note_params_for_osc(&self, osc_num: usize) -> Option<NoteOscillatorParams> {
@@ -109,26 +114,25 @@ impl SoundGenerator {
             total += note_gen.1.get_sample(lfo_freq, lfo_amplitude) * amplitude;
         }
 
-        let mut i = 0;
-        let mut finished: Vec<usize> = Vec::new();
-        
-        for note_gen in &mut self.released_notes{
+        for (i, note_gen) in  self.released_notes.iter_mut().enumerate() {
             
             let amplitude = envelope.get_amplitude(time, note_gen.trigger_on_time, note_gen.trigger_off_time, note_gen.note_pressed);
             if amplitude > 0.0 {
                 total += note_gen.get_sample(lfo_freq, lfo_amplitude) * amplitude;
             }
             else {
-                finished.push(i);
+                if self.finished_playing.len() <= MAX_NOTES {
+                    self.finished_playing.push(i);
+                }
             }
-            
-            i += 1;
         }
 
-        finished.reverse();
-        for remove_index in finished {
-            self.released_notes.remove(remove_index);
+        self.finished_playing.reverse();
+        for remove_index in &self.finished_playing {
+            self.released_notes.remove(*remove_index);
         }
+
+        self.finished_playing.clear();
 
         return total;
     }

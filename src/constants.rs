@@ -6,6 +6,7 @@ use crate::wavetype::WaveType;
 pub const SAMPLE_RATE: f32 = 44100.0;
 pub const NUM_CHANNELS: u16 = 1;
 
+pub const MAX_NOTES: usize = 16;
 
 #[derive(EnumCount, EnumIter, Copy, Clone)]
 pub enum OscNumber {

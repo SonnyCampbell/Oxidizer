@@ -56,7 +56,7 @@ impl NoteGenerator {
     }
 
     fn get_unison_voices_for_note(note: i32, param: &NoteOscillatorParams, starting_sample_index: f32) -> Vec<Oscillator> {
-        let mut osc_unison_voices: Vec<Oscillator> = Vec::new();
+        let mut osc_unison_voices: Vec<Oscillator> = Vec::new(); //todo: remove allocations
 
         if param.unisons % 2 == 0 {
             let unisons_to_add = param.unisons / 2;
@@ -74,8 +74,6 @@ impl NoteGenerator {
 
         return osc_unison_voices;
     }
-
-    // fn get_note_detune -> f32 
 
     
     fn add_unison_oscillators_to_vec(osc_vec: &mut Vec<Oscillator>, note: i32, unisons_to_add: i32, detune_pct: f32, wave_type: WaveType, starting_sample_index: f32){
