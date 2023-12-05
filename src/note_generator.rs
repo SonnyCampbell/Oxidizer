@@ -155,8 +155,9 @@ impl NoteGenerator {
         for opt in &mut self.oscillators {
             match opt {
                 Some(osc_vec) => {
+                    let num_voices = osc_vec.len() as f32;
                     for osc in osc_vec {
-                        total += osc.get_sample(lfo_freq, lfo_amplitude)
+                        total += osc.get_sample(lfo_freq, lfo_amplitude) / num_voices;
                     }
                 },
                 None => {},

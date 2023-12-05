@@ -15,10 +15,9 @@ env_logger = "0.10"
 lazy_static = "1.4.0"
 strum = "0.25.0"
 strum_macros = "0.25.3"
-tinyaudio = "0.1.2"
 
 [dev-dependencies]
-
+tinyaudio = "0.1.2"
 
 [[example]]
 name = "simple_test"
