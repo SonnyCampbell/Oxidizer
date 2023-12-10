@@ -1,4 +1,4 @@
-import {VerticalBox, ComboBox, GroupBox, Slider} from "std-widgets.slint";
+import {VerticalBox, ComboBox, GroupBox, Slider, CheckBox} from "std-widgets.slint";
 //import {Knob} from "knob.slint";
 
 export global KeyPress {
@@ -7,6 +7,7 @@ export global KeyPress {
     callback selected_wave_form(int, string);
     callback changed_unison_voices(int, int);
     callback changed_unison_detune_pct(int, int);
+    callback osc_enable_toggled(int);
 }
 
 component Key inherits Rectangle {
@@ -47,9 +48,99 @@ component WhiteKey inherits Key {
     }
 }
 
+component Oscillator inherits Rectangle {
+    in property <int> osc_index;
+    in property <[string]> osc_wave_types;
+    in property <bool> osc_enabled;
+    GridLayout {
+        Rectangle {
+            Rectangle {
+                height: 30px;
+                
+                Text {
+                    text: "Oscillator " + (osc-index + 1);
+                    x: 0px;
+                }
+                CheckBox {
+                    x: 80px;
+                    height: 10px;
+                    checked: osc_enabled;
+                    toggled => { KeyPress.osc_enable_toggled(osc-index); }
+                }
+            }
+            
+            colspan: 1;
+        }
+        Row {
+            HorizontalLayout {
+                spacing: 10px;
+                height: 30px;
+                padding: 5px;
+                Text{
+                    text: "Wave Form:";
+                    width: 80px;
+                    vertical-alignment: center;
+                }
+                ComboBox {
+                    model: osc_wave_types;
+                    width: 90px;
+                    selected(opt) => { KeyPress.selected_wave_form(osc-index, opt); }
+                }
+            }
+        }
+        Row {
+            property <int> unison_detune_pct: 20;
+            property <int> unison_voices: 1;
+            HorizontalLayout {
+                spacing: 10px;
+                height: 30px;
+                padding: 5px;
+                Text{
+                    text: "Unisons:";
+                    width: 80px;
+                    vertical-alignment: center;
+                }
+                Slider {
+                    width: 100px;
+                    minimum: 1;
+                    maximum: 16;
+                    value: unison_voices;
+                    changed(value) => {
+                        unison_voices = value;
+                        KeyPress.changed_unison_voices(osc-index, unison_voices);
+                    }
+                }
+                Rectangle {
+                    background: #424141;
+                    border-radius: 3px;
+                    width: 50px;
+                    Text{text: unison_voices + "v";}
+                }
+                Slider {
+                    width: 100px;
+                    minimum: 0;
+                    maximum: 1;
+                    value: unison_detune_pct / 100;
+                    changed(value) => {
+                        unison_detune_pct = value * 100;
+                        KeyPress.changed_unison_detune_pct(osc-index, unison_detune_pct);
+                    }
+                }
+                Rectangle {
+                    background: #424141;
+                    border-radius: 3px;
+                    width: 50px;
+                    Text{text: unison_detune_pct + "%";}
+                }
+            }
+        }  
+    }
+}
+
 
 export component MainWindow inherits Window {
-    in property <int> value: 0;
+    in property <[string]> osc_wave_types: [];
+
     property <length> white_key_width: 50px;
     property <length> white_key_spacing: 2px;
     property <length> black_key_width: 34px;
@@ -77,96 +168,33 @@ export component MainWindow inherits Window {
                 height: 300px;
 
                 Row {
-                    property <int> osc_index: 0;
-                    Rectangle {
+                    Oscillator {
+                        osc_index: 0;
+                        osc_wave_types: root.osc-wave-types;
                         height: 100px;
                         width: root.width / 2;
-                        GridLayout {
-                            Rectangle {
-                                height: 30px;
-                                Text {
-                                    text: "Oscillator " + (osc-index + 1);
-                                    x: 0px;
-                                }
-                                colspan: 1;
-                            }
-                            Row {
-                                HorizontalLayout {
-                                    spacing: 10px;
-                                    height: 30px;
-                                    padding: 5px;
-                                    Text{
-                                        text: "Wave Form:";
-                                        width: 80px;
-                                        vertical-alignment: center;
-                                    }
-                                    ComboBox {
-                                        model: ["Sin", "Saw", "Triangle", "Square", "Pulse"];
-                                        width: 90px;
-                                        selected(opt) => { KeyPress.selected_wave_form(osc-index, opt); }
-                                    }
-                                }
-                            }
-                            Row {
-                                property <int> unison_detune_pct: 20;
-                                property <int> unison_voices: 1;
-                                HorizontalLayout {
-                                    spacing: 10px;
-                                    height: 30px;
-                                    padding: 5px;
-                                    Text{
-                                        text: "Unisons:";
-                                        width: 80px;
-                                        vertical-alignment: center;
-                                    }
-                                    Slider {
-                                        width: 100px;
-                                        minimum: 1;
-                                        maximum: 16;
-                                        value: unison_voices;
-                                        changed(value) => {
-                                            unison_voices = value;
-                                            KeyPress.changed_unison_voices(osc-index, unison_voices);
-                                        }
-                                    }
-                                    Rectangle {
-                                        background: #424141;
-                                        border-radius: 3px;
-                                        width: 50px;
-                                        Text{text: unison_voices + "v";}
-                                    }
-                                    Slider {
-                                        width: 100px;
-                                        minimum: 0;
-                                        maximum: 1;
-                                        value: unison_detune_pct / 100;
-                                        changed(value) => {
-                                            unison_detune_pct = value * 100;
-                                            KeyPress.changed_unison_detune_pct(osc-index, unison_detune_pct);
-                                        }
-                                    }
-                                    Rectangle {
-                                        background: #424141;
-                                        border-radius: 3px;
-                                        width: 50px;
-                                        Text{text: unison_detune_pct + "%";}
-                                    }
-                                }
-                            }  
-                        }
-                    }  
+                        osc-enabled: true;
+                    } 
                 }
 
                 Row {
-                    
-                    Text {text: "Oscillator 1";}
-                    
+                    Oscillator {
+                        osc_index: 1;
+                        osc_wave_types: root.osc-wave-types;
+                        height: 100px;
+                        width: root.width / 2;
+                        osc-enabled: false;
+                    }
                 }
 
                 Row {
-                    
-                    Text {text: "Oscillator 1";}
-                    
+                    Oscillator {
+                        osc_index: 2;
+                        osc_wave_types: root.osc-wave-types;
+                        height: 100px;
+                        width: root.width / 2;
+                        osc-enabled: false;
+                    }
                 }
             }
         }

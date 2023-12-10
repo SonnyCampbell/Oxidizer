@@ -1,4 +1,3 @@
-use std::cell::Cell;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -11,7 +10,8 @@ use eframe::{run_native, App, NativeOptions, egui};
 
 slint::include_modules!();
 
-use strum::{EnumCount, IntoEnumIterator};
+use slint::{VecModel, ModelRc, SharedString};
+use strum::{EnumCount, IntoEnumIterator, VariantNames};
 
 use oxidizer::wavetables::*;
 use oxidizer::constants::*;
@@ -322,6 +322,13 @@ fn main() {
     let window = MainWindow::new().unwrap();
 
     let app = Rc::new(RefCell::new(OxidizerApp::default(ui_sender)));
+
+    let wave_types: Vec<SharedString> = WaveType::VARIANTS
+        .iter()
+        .map(|i| {
+            (*i).to_string().into()
+        }).collect();
+    window.set_osc_wave_types(ModelRc::from(Rc::new(VecModel::from(wave_types))));
     
     let clone = app.clone();
     window.global::<KeyPress>().on_key_pressed(move |value| {
@@ -365,6 +372,18 @@ fn main() {
         
         let params = &mut app.sound_gen_oscillators[index as usize];
         params.unison_detune_pct = value as f32 / 100.0;
+
+        let event = SynthEvent::ChangeSoundGenOscParams(params.clone());
+        let _ = app.synth_sender.send(event);
+        
+    });
+
+    let clone = app.clone();
+    window.global::<KeyPress>().on_osc_enable_toggled(move |index| {
+        let app = &mut clone.borrow_mut();
+        
+        let params = &mut app.sound_gen_oscillators[index as usize];
+        params.enabled = !params.enabled;
 
         let event = SynthEvent::ChangeSoundGenOscParams(params.clone());
         let _ = app.synth_sender.send(event);
