@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Copy, Clone, EnumIter, IntoStaticStr)]
+#[derive(Debug, PartialEq, Copy, Clone, EnumIter, IntoStaticStr, EnumString)]
 pub enum WaveType {
     Sin,
     Saw,

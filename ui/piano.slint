@@ -1,0 +1,218 @@
+import {VerticalBox, ComboBox, GroupBox, Slider} from "std-widgets.slint";
+//import {Knob} from "knob.slint";
+
+export global KeyPress {
+    callback key_pressed(string);
+    callback key_released(string);
+    callback selected_wave_form(int, string);
+    callback changed_unison_voices(int, int);
+    callback changed_unison_detune_pct(int, int);
+}
+
+component Key inherits Rectangle {
+    border-radius: 3px;
+    border-width: 2px;
+
+    in property <int> index;
+}
+
+component BlackKey inherits Key {
+    height: 130px;
+    y: 0;
+
+    background: ta.pressed ? #4264a1 : ta.has-hover ? #5f7397 : #111111;
+    ta := TouchArea {
+        pointer-event (event) => {
+            if (event.kind == PointerEventKind.down) {
+                KeyPress.key_pressed(root.index);
+            } else if (event.kind == PointerEventKind.up){
+                KeyPress.key_released(root.index);
+            }
+        }
+    }
+}
+
+component WhiteKey inherits Key {
+    height: 200px;
+    
+    background: ta.pressed ? #4264a1 : ta.has-hover ? #5f7397 : #e2e2e2;
+    ta := TouchArea {
+        pointer-event (event) => {
+            if (event.kind == PointerEventKind.down) {
+                KeyPress.key_pressed(root.index);
+            } else if (event.kind == PointerEventKind.up){
+                KeyPress.key_released(root.index);
+            }
+        }
+    }
+}
+
+
+export component MainWindow inherits Window {
+    in property <int> value: 0;
+    property <length> white_key_width: 50px;
+    property <length> white_key_spacing: 2px;
+    property <length> black_key_width: 34px;
+    property <length> black_key_spacing: white-key-spacing + white-key-width;
+    background: black;
+
+    width: 726px;
+    height: 500px;
+
+    forward-focus: my-key-handler;
+    my-key-handler := FocusScope {
+        key-pressed(event) => {
+            KeyPress.key_pressed(event.text);
+            return accept;
+        }
+        
+    }
+
+    VerticalLayout {
+        Rectangle {
+            background: #2b2b2b;
+
+            GridLayout {
+                padding-left: 10px;
+                height: 300px;
+
+                Row {
+                    property <int> osc_index: 0;
+                    Rectangle {
+                        height: 100px;
+                        width: root.width / 2;
+                        GridLayout {
+                            Rectangle {
+                                height: 30px;
+                                Text {
+                                    text: "Oscillator " + (osc-index + 1);
+                                    x: 0px;
+                                }
+                                colspan: 1;
+                            }
+                            Row {
+                                HorizontalLayout {
+                                    spacing: 10px;
+                                    height: 30px;
+                                    padding: 5px;
+                                    Text{
+                                        text: "Wave Form:";
+                                        width: 80px;
+                                        vertical-alignment: center;
+                                    }
+                                    ComboBox {
+                                        model: ["Sin", "Saw", "Triangle", "Square", "Pulse"];
+                                        width: 90px;
+                                        selected(opt) => { KeyPress.selected_wave_form(osc-index, opt); }
+                                    }
+                                }
+                            }
+                            Row {
+                                property <int> unison_detune_pct: 20;
+                                property <int> unison_voices: 1;
+                                HorizontalLayout {
+                                    spacing: 10px;
+                                    height: 30px;
+                                    padding: 5px;
+                                    Text{
+                                        text: "Unisons:";
+                                        width: 80px;
+                                        vertical-alignment: center;
+                                    }
+                                    Slider {
+                                        width: 100px;
+                                        minimum: 1;
+                                        maximum: 16;
+                                        value: unison_voices;
+                                        changed(value) => {
+                                            unison_voices = value;
+                                            KeyPress.changed_unison_voices(osc-index, unison_voices);
+                                        }
+                                    }
+                                    Rectangle {
+                                        background: #424141;
+                                        border-radius: 3px;
+                                        width: 50px;
+                                        Text{text: unison_voices + "v";}
+                                    }
+                                    Slider {
+                                        width: 100px;
+                                        minimum: 0;
+                                        maximum: 1;
+                                        value: unison_detune_pct / 100;
+                                        changed(value) => {
+                                            unison_detune_pct = value * 100;
+                                            KeyPress.changed_unison_detune_pct(osc-index, unison_detune_pct);
+                                        }
+                                    }
+                                    Rectangle {
+                                        background: #424141;
+                                        border-radius: 3px;
+                                        width: 50px;
+                                        Text{text: unison_detune_pct + "%";}
+                                    }
+                                }
+                            }  
+                        }
+                    }  
+                }
+
+                Row {
+                    
+                    Text {text: "Oscillator 1";}
+                    
+                }
+
+                Row {
+                    
+                    Text {text: "Oscillator 1";}
+                    
+                }
+            }
+        }
+
+           
+
+        Rectangle {
+            background: black;
+
+            HorizontalLayout {
+
+                spacing: root.white-key-spacing;
+
+                WhiteKey { width: root.white-key-width; index: 3; }
+                WhiteKey { width: root.white-key-width; index: 5; }
+                WhiteKey { width: root.white-key-width; index: 7; }
+                WhiteKey { width: root.white-key-width; index: 8; }
+                WhiteKey { width: root.white-key-width; index: 10; }
+                WhiteKey { width: root.white-key-width; index: 12; }
+                WhiteKey { width: root.white-key-width; index: 14; }
+
+                WhiteKey { width: root.white-key-width; index: 15; }
+                WhiteKey { width: root.white-key-width; index: 17; }
+                WhiteKey { width: root.white-key-width; index: 19; }
+                WhiteKey { width: root.white-key-width; index: 20; }
+                WhiteKey { width: root.white-key-width; index: 22; }
+                WhiteKey { width: root.white-key-width; index: 24; }
+                WhiteKey { width: root.white-key-width; index: 26; }
+            }
+
+            BlackKey { width: root.black-key-width; x: root.black-key-width;  index: 4;  }
+            BlackKey { width: root.black-key-width; x: root.black-key-width + root.black_key_spacing;  index: 6;  }
+            //BlackKey { x: 139px; }  
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 3); index: 9;  }
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 4); index: 11; }
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 5); index: 13; }
+            //BlackKey { x: 347px; }  
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 7); index: 16; }  
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 8); index: 18; }  
+            //BlackKey { x: 503px; }  
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 10); index: 21; }  
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 11);index: 23; }  
+            BlackKey { width: root.black-key-width; x: root.black-key-width + (root.black_key_spacing * 12); index: 25; }  
+
+
+        }
+    }
+    
+}

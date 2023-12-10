@@ -1,4 +1,4 @@
-use strum_macros::{EnumCount, EnumIter};
+use strum_macros::EnumIter;
 use strum::{EnumCount, IntoEnumIterator};
 
 use crate::wavetype::WaveType;

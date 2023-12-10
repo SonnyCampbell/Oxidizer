@@ -1,9 +1,15 @@
+use std::cell::Cell;
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::str::FromStr;
 use std::sync::mpsc::*;
 
 use egui::*;
 use egui_plot::{Line, Plot, PlotPoints};
 use rodio::{OutputStream, Sink};
 use eframe::{run_native, App, NativeOptions, egui};
+
+slint::include_modules!();
 
 use strum::{EnumCount, IntoEnumIterator};
 
@@ -287,7 +293,7 @@ impl App for OxidizerApp {
 }
 
 
-fn main() -> Result<(), eframe::Error> {
+fn main() {
 
     let (_stream, stream_handle) = OutputStream::try_default().expect("Failed to create output stream");
     let sink = Sink::try_new(&stream_handle).unwrap();
@@ -298,18 +304,74 @@ fn main() -> Result<(), eframe::Error> {
 
     sink.append(synth);
     sink.play();
-    
 
-    env_logger::init(); 
-    let options = NativeOptions::default();
-    return run_native(
-        "Test App", 
-        options, 
-        Box::new(|_cc| {
-            // This gives us image support:
-            //egui_extras::install_image_loaders(&cc.egui_ctx);
-            let app = OxidizerApp::default(ui_sender);
-            return Box::new(app);
-        }));
+    // env_logger::init(); 
+    // let options = NativeOptions::default();
+    // run_native(
+    //     "Test App", 
+    //     options, 
+    //     Box::new(|_cc| {
+    //         // This gives us image support:
+    //         //egui_extras::install_image_loaders(&cc.egui_ctx);
+    //         let app = OxidizerApp::default(ui_sender);
+    //         return Box::new(app);
+    //     }));
+
+        
+
+    let window = MainWindow::new().unwrap();
+
+    let app = Rc::new(RefCell::new(OxidizerApp::default(ui_sender)));
+    
+    let clone = app.clone();
+    window.global::<KeyPress>().on_key_pressed(move |value| {
+        let _ = clone.borrow().synth_sender.send(SynthEvent::NotePress(value.parse::<i32>().unwrap().clone()));  
+    });
+
+    let clone = app.clone();
+    window.global::<KeyPress>().on_key_released(move |value| {
+        let _ = clone.borrow().synth_sender.send(SynthEvent::NoteRelease(value.parse::<i32>().unwrap().clone())); 
+    });
+
+    let clone = app.clone();
+    window.global::<KeyPress>().on_selected_wave_form(move |index, opt| {
+        
+        if let Ok(wave_type) = WaveType::from_str(&opt) {
+            let app = &mut clone.borrow_mut();
+
+            let params = &mut app.sound_gen_oscillators[index as usize];
+            params.wave_type = wave_type;
+
+            let event = SynthEvent::ChangeSoundGenOscParams(params.clone());
+            let _ = app.synth_sender.send(event);
+        }
+    });
+
+    let clone = app.clone();
+    window.global::<KeyPress>().on_changed_unison_voices(move |index, value| {
+        let app = &mut clone.borrow_mut();
+        
+        let params = &mut app.sound_gen_oscillators[index as usize];
+        params.unisons = value;
+
+        let event = SynthEvent::ChangeSoundGenOscParams(params.clone());
+        let _ = app.synth_sender.send(event);
+        
+    });
+
+    let clone = app.clone();
+    window.global::<KeyPress>().on_changed_unison_detune_pct(move |index, value| {
+        let app = &mut clone.borrow_mut();
+        
+        let params = &mut app.sound_gen_oscillators[index as usize];
+        params.unison_detune_pct = value as f32 / 100.0;
+
+        let event = SynthEvent::ChangeSoundGenOscParams(params.clone());
+        let _ = app.synth_sender.send(event);
+        
+    });
+
+    window.run().unwrap();
+    
     
 }
